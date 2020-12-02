@@ -7,7 +7,9 @@
 
 
 #include <xc.h>
+#include "testi.h"
 
 void main(void) {
+    test();
     return;
 }
