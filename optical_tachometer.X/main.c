@@ -9,7 +9,10 @@
 #include <xc.h>
 #include "testi.h"
 
+//Moikka kaikki!!!:))))
+//Aloitamme tässä projektiamme:)
 void main(void) {
     test();
     return;
 }
+
