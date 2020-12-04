@@ -10,6 +10,7 @@
 
 #include <xc.h>
 #include "testi.h"
+#include "update_display.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/cpufunc.h>
@@ -22,7 +23,10 @@ static void USART0_init(void);
 void RTC_init(void);
 void ADC_init(void);
 void SEGMENT_init(void);
-void update_display(void);
+
+// Global variable RPM (indicates most significant bit
+// value of rotating propeller)
+volatile int rpm;
 
 // Fuction for sending text to computer terminal/putty
 static void USART0_sendChar(char c)
@@ -138,29 +142,19 @@ void SEGMENT_init(void)
     VPORTC.DIR |= PIN7_bm;
 }
 
-void update_display(void)
-{
-    // päivitys
-    // testi laitetaa jännä numero segmenttiin :)
-    VPORTC.OUT |= PIN0_bm;
-    VPORTC.OUT |= PIN1_bm;
-    VPORTC.OUT |= PIN2_bm;
-    VPORTC.OUT |= PIN4_bm;
-    VPORTC.OUT |= PIN6_bm;
-    VPORTC.OUT |= PIN7_bm;
-}
-
 // RTC interrupt
 ISR(RTC_PIT_vect)
 {
     // Clearing interrupt flag
     RTC.PITINTFLAGS = RTC_PI_bm;
     // Tähän display päivitys
-    update_display();
+    update_display(rpm);
 }
 
 int main(void) 
 {
+    // Aluksi rpm on vain 0
+    rpm = 0;
     // Setting internal reference voltage to 1.5V
     VREF.CTRLA = VREF_ADC0REFSEL_1V1_gc;
     // Initialize RTC
@@ -179,7 +173,7 @@ int main(void)
     
     while(1)
     {
-        
+        ;
     }
     test();
     return 0;
