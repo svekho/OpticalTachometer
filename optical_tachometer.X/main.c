@@ -20,6 +20,7 @@ static void USART0_sendChar(char c);
 static int USART0_printChar(char c, FILE *stream);
 static void USART0_init(void);
 void RTC_init(void);
+void ADC_init(void);
 void SEGMENT_init(void);
 void update_display(void);
 
@@ -105,7 +106,23 @@ void RTC_init(void)
     // twice a second?? and enable periodic interrupt timer
     RTC.PITCTRLA = RTC_PERIOD_CYC16384_gc | RTC_PITEN_bm;
 }
-
+void ADC_init(void)
+{
+    // Set port E pin 0 as input
+    PORTE.DIRCLR = PIN0_bm;
+    // Disable input buffer
+    PORTE.PIN0CTRL |= PORT_ISC_INPUT_DISABLE_gc;
+    
+    // Resolution 10 bits
+    ADC0.CTRLA &= ~ADC_RESSEL_bm;
+    
+    // Voltage reference is 1,5V and prescaler of 16
+    ADC0.CTRLC |= ADC_REFSEL_INTREF_gc | ADC_PRESC_DIV16_gc;
+    
+    // Enable ADC
+    ADC0.CTRLA |= ADC_ENABLE_bm;
+    
+}
 void SEGMENT_init(void)
 {
     // Tähä 7-segmenttihötskän tunnistus
@@ -144,8 +161,12 @@ ISR(RTC_PIT_vect)
 
 int main(void) 
 {
+    // Setting internal reference voltage to 1.5V
+    VREF.CTRLA = VREF_ADC0REFSEL_1V1_gc;
     // Initialize RTC
     RTC_init();
+    // Initialize ADC and its input pin
+    ADC_init();
     // Initialize 7-segment display
     SEGMENT_init();
     // Initialize output to putty
