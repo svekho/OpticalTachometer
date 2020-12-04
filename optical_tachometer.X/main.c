@@ -5,6 +5,8 @@
  * Created on 02 December 2020, 13:32
  */
 #define F_CPU 3333333
+#define USART0_BAUD_RATE(BAUD_RATE) \
+    ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
 
 #include <xc.h>
 #include "testi.h"
@@ -14,11 +16,44 @@
 #include <stdio.h>
 
 // Function declaration
+static void USART0_sendChar(char c);
+static int USART0_printChar(char c, FILE *stream);
+static void USART0_init(void);
 void RTC_init(void);
 void ADC_init(void);
 void SEGMENT_init(void);
 void update_display(void);
 
+// Fuction for sending text to computer terminal/putty
+static void USART0_sendChar(char c)
+{
+    while (!(USART0.STATUS & USART_DREIF_bm))
+    {
+        ;
+    }
+    USART0.TXDATAL = c;
+}
+
+static int USART0_printChar(char c, FILE *stream)
+{ 
+    USART0_sendChar(c);
+    return 0; 
+}
+
+static FILE USART_stream =  \
+    FDEV_SETUP_STREAM(USART0_printChar, NULL, _FDEV_SETUP_WRITE);
+
+// Intitialising connection to  computer terminal/putty
+static void USART0_init(void)
+{
+    PORTA.DIR |= PIN0_bm;
+    
+    USART0.BAUD = (uint16_t)USART0_BAUD_RATE(9600); 
+    
+    USART0.CTRLB |= USART_TXEN_bm;  
+    
+    stdout = &USART_stream;
+}
 // Configuring RTC
 void RTC_init(void)
 {
@@ -110,7 +145,7 @@ void update_display(void)
     VPORTC.OUT |= PIN0_bm;
     VPORTC.OUT |= PIN1_bm;
     VPORTC.OUT |= PIN2_bm;
-    VPORTC.OUT |= PIN3_bm;
+    VPORTC.OUT |= PIN4_bm;
     VPORTC.OUT |= PIN6_bm;
     VPORTC.OUT |= PIN7_bm;
 }
@@ -134,9 +169,13 @@ int main(void)
     ADC_init();
     // Initialize 7-segment display
     SEGMENT_init();
+    // Initialize output to putty
+    USART0_init();
     
     // Enable global interrupts
     sei();
+    
+    printf("Hello, testing testing.\r\n");
     
     while(1)
     {
