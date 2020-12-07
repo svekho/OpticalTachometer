@@ -114,14 +114,19 @@ void ADC_init(void)
 {
     // Set port E pin 0 as input
     PORTE.DIRCLR = PIN0_bm;
-    // Disable input buffer
+    
+    // Disable input buffer, pull-up resistor disabled by default 
     PORTE.PIN0CTRL |= PORT_ISC_INPUT_DISABLE_gc;
     
-    // Resolution 10 bits
-    ADC0.CTRLA &= ~ADC_RESSEL_bm;
+    // Selecting AN8 (PE0) to be connected to ADC
+    ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
     
-    // Voltage reference is 1,5V and prescaler of 16
+    // Voltage reference is 1,5V (internal reference voltage already defined) 
+    // and prescaler of 16
     ADC0.CTRLC |= ADC_REFSEL_INTREF_gc | ADC_PRESC_DIV16_gc;
+    
+    // Resolution 10 bits
+    ADC0.CTRLA |= ADC_RESSEL_10BIT_gc;
     
     // Enable ADC
     ADC0.CTRLA |= ADC_ENABLE_bm;
