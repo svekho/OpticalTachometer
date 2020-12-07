@@ -161,7 +161,7 @@ int main(void)
     // Aluksi rpm on vain 0
     rpm = 0;
     // Setting internal reference voltage to 1.5V
-    VREF.CTRLA = VREF_ADC0REFSEL_1V1_gc;
+    VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
     // Initialize RTC
     RTC_init();
     // Initialize ADC and its input pin
