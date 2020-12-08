@@ -188,6 +188,8 @@ int main(void)
 {
     // Aluksi adc arvo vain 0
     adcValue = 0;
+    // Aluksi rotations vain 0
+    rotations = 0;
     // Aluksi rpm alkuperäinen vain 0
     rpm = 0;
     // Aluksi msd on vain 0
