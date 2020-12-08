@@ -9,12 +9,12 @@
     ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
 
 #include <xc.h>
-#include "testi.h"
 #include "update_display.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/cpufunc.h>
 #include <stdio.h>
+#include <avr/sleep.h>
 
 // Function declaration
 static void USART0_sendChar(char c);
@@ -26,16 +26,18 @@ void SEGMENT_init(void);
 
 // Global variable to store adc result
 volatile uint16_t adcValue;
-// Global variable to store the rpm calculated from adcValue
+// Global variable to store the rpm calculated from rotations
 uint16_t rpm;
 // Variable to count rotations
-volatile uint16_t rotations;
+uint16_t rotations;
 // Global variable msd (indicates most significant digit
 // value of rotating propeller rpm)
-volatile int msd;
+uint8_t msd;
 //int to check if the propeller is in front of the LDR, and makes sure, the 
 //propeller is only counted once
-uint8_t isPropOn;
+volatile uint8_t isPropOn;
+// Checking whether should update display
+volatile uint8_t segmentUpdate;
 
 // Fuction for sending text to computer terminal/putty
 static void USART0_sendChar(char c)
@@ -116,7 +118,7 @@ void RTC_init(void)
     // Enable periodic interrupt
     RTC.PITINTCTRL = RTC_PI_bm;
     // Selecting number of RTC clock cycles (16384) because we want interrupt
-    // twice a second?? and enable periodic interrupt timer
+    // twice a second and enable periodic interrupt timer
     RTC.PITCTRLA = RTC_PERIOD_CYC16384_gc | RTC_PITEN_bm;
 }
 void ADC_init(void)
@@ -149,9 +151,9 @@ void ADC_init(void)
 }
 void SEGMENT_init(void)
 {
-    // Tähä 7-segmenttihötskän tunnistus
+    // 7-segment display configurations
     
-    // portti c configured as an output
+    // Port C configured as an output
     VPORTC.DIR |= PIN0_bm;
     VPORTC.DIR |= PIN1_bm;
     VPORTC.DIR |= PIN2_bm;
@@ -167,18 +169,8 @@ ISR(RTC_PIT_vect)
 {
     // Clearing interrupt flag
     RTC.PITINTFLAGS = RTC_PI_bm;
-    // adcValue -> rpm
-    rpm = rotations*60;
-    printf("%i rpm\r\n", rpm);
-    // rpm -> msd
-    while(rpm >=10)
-    {
-        rpm = rpm / 10;
-    }
-    msd = rpm;
-    update_display(msd);
-    rpm = 0;
-    rotations=0;
+    // Segment needs to be updated
+    segmentUpdate = 1;
 }
 
 // ADC interrupt, ADC conversion is done
@@ -188,20 +180,35 @@ ISR(ADC0_RESRDY_vect)
     ADC0.INTFLAGS = ADC_RESRDY_bm;
     // Setting the value adc measured
     adcValue = ADC0.RES;
+    //AdcValue: propeller is in front of LDR (is 700 originally)
+    // (will be replaced later is now magic number)
+    if (adcValue>700)
+    {
+        //makes sure the rotations are only updated once per rotation
+        isPropOn=1;
+    }
+    else
+    {
+        isPropOn = 0;
+    }
+    // No segment updating
+    segmentUpdate = 2;
 }
 
 int main(void) 
 {
-    // Aluksi adc arvo vain 0
+    // In the beginning the value of adc is 0
     adcValue = 0;
-    // Aluksi rotations vain 0
+    // In the beginning the value of rotations is 0
     rotations = 0;
-    // Aluksi rpm alkuperäinen vain 0
+    // In the beginning the value of rpm is 0
     rpm = 0;
-    // Aluksi msd on vain 0
+    // In the beginning the value of msd is 0
     msd = 0;
     //In the beginning the value of isPropOn is 0
     isPropOn = 0;
+    // In the beginning the value of segmentUpdate is 0
+    segmentUpdate = 0;
     // Setting internal reference voltage to 1.5V
     VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
     // Initialize output to putty
@@ -212,31 +219,63 @@ int main(void)
     ADC_init();
     // Initialize RTC
     RTC_init();
+    // Setting IDLE as sleep mode
+    set_sleep_mode(SLPCTRL_SMODE_IDLE_gc);
     // Start ADC conversion
     ADC0.COMMAND = ADC_STCONV_bm;
     
     // Enable global interrupts
     sei();
     
+    // testing
     printf("Hello, testing testing.\r\n");
     
     while(1)
     {
-        //AdcValue while propeller is in front of LDR
-        while(adcValue>700)
-        {   
-            //makes sure the rotations are only updated once per rotation
-            isPropOn=1;
-        } 
-        //when the propeller is not in front of the LDR anymore, the rotations 
-        //value is updated.
-        if (isPropOn)
+        // Entering sleep mode every time after wake up
+        sleep_mode();
+        // Checking whether the interrupt was about segment updating
+        if (segmentUpdate == 1)
         {
-            rotations++;
-            isPropOn=0;
+            // Disable interrupts for segment updating
+            cli();
+            // rpm calculated from rotations (60 because reading value twice a 
+            // second *120 but propeller has two wings /2 so *60)
+            rpm = rotations*60;
+            // testing
+            printf("%i rpm\r\n", rpm);
+            // Counting first digit from rpm
+            while(rpm >=10)
+            {
+            // Dividing with 10 until only one number is left -> msd
+            rpm = rpm / 10;
+            }
+            msd = rpm;
+            // Updating display to msd
+            update_display(msd);
+            // Resetting rpm and rotations for next round
+            rpm = 0;
+            rotations=0;
+            // Enable interrupts again
+            sei();
+        }
+        // Checking whether interrupt was from result-ready adc
+        else if (segmentUpdate == 2)
+        {
+        // Amy oliks sul joku korjaus? 
+            //when the propeller is not in front of the LDR, the
+            // rotations value is updated.
+            if (isPropOn)
+            {
+                // Disable global interrupts to update propeller
+                cli();
+                rotations++;
+                isPropOn=0;
+                // Enable global interrupts
+                sei();
+            }
         }
     }
-    test();
     return 0;
 }
 
