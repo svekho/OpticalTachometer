@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-    void update_display(int rpm);
+    void update_display(int msd);
 
 
 #ifdef	__cplusplus

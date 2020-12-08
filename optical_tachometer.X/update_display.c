@@ -1,9 +1,9 @@
 #include <avr/io.h>
 
-void update_display(int rpm)
+void update_display(int msd)
 {
     // Checking which number to play on 7-segment display
-    switch(rpm)
+    switch(msd)
     {
         case 0 :
             VPORTC.OUT |= PIN7_bm;

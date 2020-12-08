@@ -24,9 +24,13 @@ void RTC_init(void);
 void ADC_init(void);
 void SEGMENT_init(void);
 
-// Global variable RPM (indicates most significant bit
-// value of rotating propeller)
-volatile int rpm;
+// Global variable to store adc result
+volatile uint16_t adcValue;
+// Global variable to store the rpm calculated from adcValue
+uint16_t rpm;
+// Global variable msd (indicates most significant digit
+// value of rotating propeller rpm)
+volatile int msd;
 
 // Fuction for sending text to computer terminal/putty
 static void USART0_sendChar(char c)
@@ -114,17 +118,28 @@ void ADC_init(void)
 {
     // Set port E pin 0 as input
     PORTE.DIRCLR = PIN0_bm;
-    // Disable input buffer
+    
+    // Disable input buffer, pull-up resistor disabled by default 
     PORTE.PIN0CTRL |= PORT_ISC_INPUT_DISABLE_gc;
     
-    // Resolution 10 bits
-    ADC0.CTRLA &= ~ADC_RESSEL_bm;
-    
-    // Voltage reference is 1,5V and prescaler of 16
+    // Voltage reference is 1,5V (internal reference voltage already defined) 
+    // and prescaler of 16
     ADC0.CTRLC |= ADC_REFSEL_INTREF_gc | ADC_PRESC_DIV16_gc;
+    
+    // Resolution 10 bits
+    ADC0.CTRLA |= ADC_RESSEL_10BIT_gc;
     
     // Enable ADC
     ADC0.CTRLA |= ADC_ENABLE_bm;
+    
+    // Selecting AN8 (PE0) to be connected to ADC
+    ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
+    
+    // Freerun mode enabled (next conversion starts automatically)
+    ADC0.CTRLA |= ADC_FREERUN_bm;
+    
+    // Enable interrupts
+    ADC0.INTCTRL |= ADC_RESRDY_bm;
     
 }
 void SEGMENT_init(void)
@@ -147,24 +162,46 @@ ISR(RTC_PIT_vect)
 {
     // Clearing interrupt flag
     RTC.PITINTFLAGS = RTC_PI_bm;
-    // Tähän display päivitys
-    update_display(rpm);
+    // adcValue -> rpm
+    rpm = adcValue;
+    // rpm -> msd
+    while(rpm >=10)
+    {
+        rpm = rpm / 10;
+    }
+    msd = rpm;
+    update_display(msd);
+}
+
+// ADC interrupt, ADC conversion is done
+ISR(ADC0_RESRDY_vect)
+{
+    // Clearing interrupt flag
+    ADC0.INTFLAGS = ADC_RESRDY_bm;
+    // Setting the value adc measured
+    adcValue = ADC0.RES;
 }
 
 int main(void) 
 {
-    // Aluksi rpm on vain 0
+    // Aluksi adc arvo vain 0
+    adcValue = 0;
+    // Aluksi rpm alkuperäinen vain 0
     rpm = 0;
+    // Aluksi msd on vain 0
+    msd = 0;
     // Setting internal reference voltage to 1.5V
-    VREF.CTRLA = VREF_ADC0REFSEL_1V1_gc;
-    // Initialize RTC
-    RTC_init();
-    // Initialize ADC and its input pin
-    ADC_init();
-    // Initialize 7-segment display
-    SEGMENT_init();
+    VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
     // Initialize output to putty
     USART0_init();
+    // Initialize 7-segment display
+    SEGMENT_init();
+    // Initialize ADC and its input pin
+    ADC_init();
+    // Initialize RTC
+    RTC_init();
+    // Start ADC conversion
+    ADC0.COMMAND = ADC_STCONV_bm;
     
     // Enable global interrupts
     sei();
