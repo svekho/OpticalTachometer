@@ -212,7 +212,7 @@ int main(void)
     
     while(1)
     {
-        if(adcValue>tietty jännite)
+        if(adcValue>1000)
         {
             rotations++;
             printf("%d rotations", rotations);
