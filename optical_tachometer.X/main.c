@@ -33,6 +33,9 @@ volatile uint16_t rotations;
 // Global variable msd (indicates most significant digit
 // value of rotating propeller rpm)
 volatile int msd;
+//int to check if the propeller is in front of the LDR, and makes sure, the 
+//propeller is only counted once
+uint8_t isPropOn;
 
 // Fuction for sending text to computer terminal/putty
 static void USART0_sendChar(char c)
@@ -166,6 +169,7 @@ ISR(RTC_PIT_vect)
     RTC.PITINTFLAGS = RTC_PI_bm;
     // adcValue -> rpm
     rpm = rotations*60;
+    printf("%i rpm\r\n", rpm);
     // rpm -> msd
     while(rpm >=10)
     {
@@ -173,6 +177,8 @@ ISR(RTC_PIT_vect)
     }
     msd = rpm;
     update_display(msd);
+    rpm = 0;
+    rotations=0;
 }
 
 // ADC interrupt, ADC conversion is done
@@ -192,6 +198,8 @@ int main(void)
     rpm = 0;
     // Aluksi msd on vain 0
     msd = 0;
+    //In the beginning the value of isPropOn is 0
+    isPropOn = 0;
     // Setting internal reference voltage to 1.5V
     VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
     // Initialize output to putty
@@ -212,10 +220,18 @@ int main(void)
     
     while(1)
     {
-        if(adcValue>1000)
+        //AdcValue while propeller is in front of LDR
+        while(adcValue>700)
+        {   
+            //makes sure the rotations are only updated once per rotation
+            isPropOn=1;
+        } 
+        //when the propeller is not in front of the LDR anymore, the rotations 
+        //value is updated.
+        if (isPropOn)
         {
             rotations++;
-            printf("%d rotations", rotations);
+            isPropOn=0;
         }
     }
     test();
