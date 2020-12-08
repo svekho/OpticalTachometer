@@ -7,6 +7,7 @@
 #define F_CPU 3333333
 #define USART0_BAUD_RATE(BAUD_RATE) \
     ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
+#define MIN_VOLT_DIFF (30)
 
 #include <xc.h>
 #include "update_display.h"
@@ -15,6 +16,7 @@
 #include <avr/cpufunc.h>
 #include <stdio.h>
 #include <avr/sleep.h>
+#include <util/delay.h>
 
 // Function declaration
 static void USART0_sendChar(char c);
@@ -23,6 +25,7 @@ static void USART0_init(void);
 void RTC_init(void);
 void ADC_init(void);
 void SEGMENT_init(void);
+void calibrate_threshold(void);
 
 // Global variable to store adc result
 volatile uint16_t adcValue;
@@ -38,6 +41,9 @@ uint8_t msd;
 volatile uint8_t isPropOn;
 // Checking whether should update display
 volatile uint8_t segmentUpdate;
+// Value for storing the voltage level used as indicator whether there is a 
+//propellor in front of the LDR or not.
+uint16_t voltThreshold;
 
 // Fuction for sending text to computer terminal/putty
 static void USART0_sendChar(char c)
@@ -182,7 +188,7 @@ ISR(ADC0_RESRDY_vect)
     adcValue = ADC0.RES;
     //AdcValue: propeller is in front of LDR (is 700 originally)
     // (will be replaced later is now magic number)
-    if (adcValue>700)
+    if (adcValue>voltThreshold)
     {
         //makes sure the rotations are only updated once per rotation
         isPropOn=1;
@@ -195,10 +201,38 @@ ISR(ADC0_RESRDY_vect)
     segmentUpdate = 2;
 }
 
+// Calibrates the threshold for light vs dark, depending on current lighting.
+void calibrate_threshold(void)
+{
+    // temporary values for calibration
+    uint16_t calib1;
+    uint16_t calib2;
+    uint16_t calib3;
+    
+    printf("Calibrating lighting, one moment...\r\n");
+    
+    //assign adcValues to the temporary calibration values
+    calib1 = adcValue;
+    _delay_ms(1000);
+    printf(".\r\n");
+    
+    calib2 = adcValue;
+    _delay_ms(1000);
+    printf(".\r\n");
+ 
+    calib3 = adcValue;
+    _delay_ms(1000);
+    //set voltThreshold a little bit above the average of the calibration values
+    voltThreshold = (calib1+calib2+calib3)/3 + MIN_VOLT_DIFF;
+    printf("Calibration complete!\r\n");
+    printf("Threshold voltage: %i\r\n\n", voltThreshold);
+    return;
+}
+
 int main(void) 
 {
     // In the beginning the value of adc is 0
-    adcValue = 0;
+    //adcValue = 0;
     // In the beginning the value of rotations is 0
     rotations = 0;
     // In the beginning the value of rpm is 0
@@ -219,6 +253,7 @@ int main(void)
     ADC_init();
     // Initialize RTC
     RTC_init();
+   
     // Setting IDLE as sleep mode
     set_sleep_mode(SLPCTRL_SMODE_IDLE_gc);
     // Start ADC conversion
@@ -226,10 +261,8 @@ int main(void)
     
     // Enable global interrupts
     sei();
-    
-    // testing
-    printf("Hello, testing testing.\r\n");
-    
+     // Calibrates current lighting without anything in front of the LDR
+    calibrate_threshold();
     while(1)
     {
         // Entering sleep mode every time after wake up
