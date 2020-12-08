@@ -28,6 +28,8 @@ void SEGMENT_init(void);
 volatile uint16_t adcValue;
 // Global variable to store the rpm calculated from adcValue
 uint16_t rpm;
+// Variable to count rotations
+volatile uint16_t rotations;
 // Global variable msd (indicates most significant digit
 // value of rotating propeller rpm)
 volatile int msd;
@@ -163,7 +165,7 @@ ISR(RTC_PIT_vect)
     // Clearing interrupt flag
     RTC.PITINTFLAGS = RTC_PI_bm;
     // adcValue -> rpm
-    rpm = adcValue;
+    rpm = rotations*60;
     // rpm -> msd
     while(rpm >=10)
     {
@@ -210,7 +212,11 @@ int main(void)
     
     while(1)
     {
-        ;
+        if(adcValue>tietty jännite)
+        {
+            rotations++;
+            printf("%d rotations", rotations);
+        }
     }
     test();
     return 0;
