@@ -232,7 +232,7 @@ void calibrate_threshold(void)
 int main(void) 
 {
     // In the beginning the value of adc is 0
-    //adcValue = 0;
+    adcValue = 0;
     // In the beginning the value of rotations is 0
     rotations = 0;
     // In the beginning the value of rpm is 0
