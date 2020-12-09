@@ -196,12 +196,10 @@ ISR(ADC0_RESRDY_vect)
         {
             isPropOn=1;
         }
-        //printf("%i\r\n", isPropOn);
     }
     else
     {
         isPropOn = 0;
-        //printf("%i\r\n", isPropOn);
     }
     // No segment updating
     segmentUpdate = 2;
@@ -215,18 +213,22 @@ void calibrate_threshold(void)
     
     printf("Calibrating lighting, one moment...\r\n");
     
+    // Measuring current light conditions in ldr environment 100 times
     for (int i = 0; i<=99; i++)
     {
+        // Waiting adc result to be ready
         while (!(ADC0.INTFLAGS & ADC_RESRDY_bm))
         {
             ;
         }
+        // Setting every 33th measured value to the array
         if ((i % 33) == 0)
         {
             calibTab[i/33 - 1] = ADC0.RES;
             printf(".\r\n");
             printf("%d\r\n", calibTab[i/33 - 1]);
         }
+        // Allowing next adc conversion begin
         ADC0.INTFLAGS = ADC_RESRDY_bm;
     }
 
@@ -309,7 +311,6 @@ int main(void)
                 cli();
                 rotations++;
                 isPropOn = 2;
-                //printf("%i", rotations);
                 // Enable global interrupts
                 sei();
             }
