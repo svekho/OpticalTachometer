@@ -18,7 +18,7 @@
 #include <avr/sleep.h>
 #include <util/delay.h>
 
-// Function declaration
+// Function declarations
 static void USART0_sendChar(char c);
 static int USART0_printChar(char c, FILE *stream);
 static void USART0_init(void);
@@ -36,13 +36,13 @@ uint16_t rotations;
 // Global variable msd (indicates most significant digit
 // value of rotating propeller rpm)
 uint8_t msd;
-//int to check if the propeller is in front of the LDR, and makes sure, the 
-//propeller is only counted once
+// int to check if the propeller is in front of the LDR, and makes sure, the 
+// propeller is only counted once
 volatile uint8_t isPropOn;
 // Checking whether should update display
 volatile uint8_t segmentUpdate;
 // Value for storing the voltage level used as indicator whether there is a 
-//propellor in front of the LDR or not.
+// propellor in front of the LDR or not.
 uint16_t voltThreshold;
 
 // Fuction for sending text to computer terminal/putty
@@ -75,6 +75,7 @@ static void USART0_init(void)
     
     stdout = &USART_stream;
 }
+
 // Configuring RTC
 void RTC_init(void)
 {
@@ -127,6 +128,8 @@ void RTC_init(void)
     // twice a second and enable periodic interrupt timer
     RTC.PITCTRLA = RTC_PERIOD_CYC16384_gc | RTC_PITEN_bm;
 }
+
+// Configuring ADC
 void ADC_init(void)
 {
     // Set port E pin 0 as input
@@ -155,6 +158,7 @@ void ADC_init(void)
     ADC0.INTCTRL |= ADC_RESRDY_bm;
     
 }
+// Initialize 7-segment display
 void SEGMENT_init(void)
 {
     // 7-segment display configurations
@@ -204,26 +208,28 @@ ISR(ADC0_RESRDY_vect)
 // Calibrates the threshold for light vs dark, depending on current lighting.
 void calibrate_threshold(void)
 {
-    // temporary values for calibration
-    uint16_t calib1;
-    uint16_t calib2;
-    uint16_t calib3;
+    // temporary values for calibration (array)
+    int calibTab [4] = {0};
     
     printf("Calibrating lighting, one moment...\r\n");
     
-    //assign adcValues to the temporary calibration values
-    calib1 = adcValue;
-    _delay_ms(1000);
-    printf(".\r\n");
-    
-    calib2 = adcValue;
-    _delay_ms(1000);
-    printf(".\r\n");
- 
-    calib3 = adcValue;
-    _delay_ms(1000);
+    for (int i = 0; i<15; i++)
+    {
+        while (!(ADC0.INTFLAGS & ADC_RESRDY_bm))
+        {
+            ;
+        }
+        if ((i % 5) == 0)
+        {
+            calibTab[i/5 - 1] = ADC0.RES;
+            printf(".\r\n");
+            printf("%d\r\n", calibTab[i/5 - 1]);
+        }
+        ADC0.INTFLAGS = ADC_RESRDY_bm;
+    }
+
     //set voltThreshold a little bit above the average of the calibration values
-    voltThreshold = (calib1+calib2+calib3)/3 + MIN_VOLT_DIFF;
+    voltThreshold = (calibTab[0]+calibTab[1]+calibTab[2])/3 + MIN_VOLT_DIFF;
     printf("Calibration complete!\r\n");
     printf("Threshold voltage: %i\r\n\n", voltThreshold);
     return;
@@ -231,17 +237,12 @@ void calibrate_threshold(void)
 
 int main(void) 
 {
-    // In the beginning the value of adc is 0
+    // In the beginning the value of parameters is 0
     adcValue = 0;
-    // In the beginning the value of rotations is 0
     rotations = 0;
-    // In the beginning the value of rpm is 0
     rpm = 0;
-    // In the beginning the value of msd is 0
     msd = 0;
-    //In the beginning the value of isPropOn is 0
     isPropOn = 0;
-    // In the beginning the value of segmentUpdate is 0
     segmentUpdate = 0;
     // Setting internal reference voltage to 1.5V
     VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
@@ -259,10 +260,12 @@ int main(void)
     // Start ADC conversion
     ADC0.COMMAND = ADC_STCONV_bm;
     
+    // Calibrates current lighting without anything in front of the LDR
+    calibrate_threshold();
+    
     // Enable global interrupts
     sei();
-     // Calibrates current lighting without anything in front of the LDR
-    calibrate_threshold();
+    
     while(1)
     {
         // Entering sleep mode every time after wake up
@@ -295,7 +298,6 @@ int main(void)
         // Checking whether interrupt was from result-ready adc
         else if (segmentUpdate == 2)
         {
-        // Amy oliks sul joku korjaus? 
             //when the propeller is not in front of the LDR, the
             // rotations value is updated.
             if (isPropOn)
