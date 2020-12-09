@@ -29,8 +29,6 @@ void calibrate_threshold(void);
 
 // Global variable to store adc result
 volatile uint16_t adcValue;
-// Global variable to store the rpm calculated from rotations
-uint16_t rpm;
 // Variable to count rotations
 volatile uint16_t rotations;
 // Global variable msd (indicates most significant digit
@@ -39,7 +37,7 @@ uint8_t msd;
 // int to check if the propeller is in front of the LDR, and makes sure, the 
 // propeller is only counted once
 volatile uint8_t isPropOn;
-// Checking whether should update display
+// Checking whether should update display or calculate rotations from adc
 volatile uint8_t segmentUpdate;
 // Value for storing the voltage level used as indicator whether there is a 
 // propellor in front of the LDR or not.
@@ -190,8 +188,7 @@ ISR(ADC0_RESRDY_vect)
     ADC0.INTFLAGS = ADC_RESRDY_bm;
     // Setting the value adc measured
     adcValue = ADC0.RES;
-    //AdcValue: propeller is in front of LDR (is 700 originally)
-    // (will be replaced later is now magic number)
+    //AdcValue: propeller is in front of LDR, calibrated in the beginning
     if (adcValue>voltThreshold)
     {
         //makes sure the rotations are only updated once per rotation
@@ -199,12 +196,10 @@ ISR(ADC0_RESRDY_vect)
         {
             isPropOn=1;
         }
-        //printf("%i\r\n", isPropOn);
     }
     else
     {
         isPropOn = 0;
-        //printf("%i\r\n", isPropOn);
     }
     // No segment updating
     segmentUpdate = 2;
@@ -218,18 +213,22 @@ void calibrate_threshold(void)
     
     printf("Calibrating lighting, one moment...\r\n");
     
+    // Measuring current light conditions in ldr environment 100 times
     for (int i = 0; i<=99; i++)
     {
+        // Waiting adc result to be ready
         while (!(ADC0.INTFLAGS & ADC_RESRDY_bm))
         {
             ;
         }
+        // Setting every 33th measured value to the array
         if ((i % 33) == 0)
         {
             calibTab[i/33 - 1] = ADC0.RES;
             printf(".\r\n");
             printf("%d\r\n", calibTab[i/33 - 1]);
         }
+        // Allowing next adc conversion begin
         ADC0.INTFLAGS = ADC_RESRDY_bm;
     }
 
@@ -245,7 +244,8 @@ int main(void)
     // In the beginning the value of parameters is 0
     adcValue = 0;
     rotations = 0;
-    rpm = 0;
+    // Variable to store the rpm calculated from rotations
+    uint16_t rpm = 0;
     msd = 0;
     isPropOn = 0;
     segmentUpdate = 0;
@@ -311,7 +311,6 @@ int main(void)
                 cli();
                 rotations++;
                 isPropOn = 2;
-                //printf("%i", rotations);
                 // Enable global interrupts
                 sei();
             }
