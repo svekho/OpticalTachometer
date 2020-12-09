@@ -192,11 +192,16 @@ ISR(ADC0_RESRDY_vect)
     if (adcValue>voltThreshold)
     {
         //makes sure the rotations are only updated once per rotation
-        isPropOn=1;
+        if(!isPropOn)
+        {
+            isPropOn=1;
+        }
+        //printf("%i\r\n", isPropOn);
     }
     else
     {
         isPropOn = 0;
+        //printf("%i\r\n", isPropOn);
     }
     // No segment updating
     segmentUpdate = 2;
@@ -210,17 +215,17 @@ void calibrate_threshold(void)
     
     printf("Calibrating lighting, one moment...\r\n");
     
-    for (int i = 0; i<15; i++)
+    for (int i = 0; i<=99; i++)
     {
         while (!(ADC0.INTFLAGS & ADC_RESRDY_bm))
         {
             ;
         }
-        if ((i % 5) == 0)
+        if ((i % 33) == 0)
         {
-            calibTab[i/5 - 1] = ADC0.RES;
+            calibTab[i/33 - 1] = ADC0.RES;
             printf(".\r\n");
-            printf("%d\r\n", calibTab[i/5 - 1]);
+            printf("%d\r\n", calibTab[i/33 - 1]);
         }
         ADC0.INTFLAGS = ADC_RESRDY_bm;
     }
@@ -298,12 +303,13 @@ int main(void)
         {
             //when the propeller is not in front of the LDR, the
             // rotations value is updated.
-            if (isPropOn)
+            if (isPropOn == 1)
             {
                 // Disable global interrupts to update propeller
                 cli();
                 rotations++;
-                isPropOn=0;
+                isPropOn = 2;
+                //printf("%i", rotations);
                 // Enable global interrupts
                 sei();
             }
