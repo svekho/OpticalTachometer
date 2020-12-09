@@ -8,7 +8,6 @@
 #define USART0_BAUD_RATE(BAUD_RATE) \
     ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
 #define MIN_VOLT_DIFF (30)
-
 #include <xc.h>
 #include "update_display.h"
 #include <avr/io.h>
@@ -192,12 +191,12 @@ ISR(ADC0_RESRDY_vect)
     if (adcValue>voltThreshold)
     {
         //makes sure the rotations are only updated once per rotation
-        if(!isPropOn)
+        if(isPropOn == 0)
         {
             isPropOn=1;
         }
     }
-    else
+    else if (adcValue<voltThreshold-5)
     {
         isPropOn = 0;
     }
@@ -214,7 +213,7 @@ void calibrate_threshold(void)
     printf("Calibrating lighting, one moment...\r\n");
     
     // Measuring current light conditions in ldr environment 100 times
-    for (int i = 0; i<=99; i++)
+    for (int i = 0; i<=9999; i++)
     {
         // Waiting adc result to be ready
         while (!(ADC0.INTFLAGS & ADC_RESRDY_bm))
@@ -222,11 +221,10 @@ void calibrate_threshold(void)
             ;
         }
         // Setting every 33th measured value to the array
-        if ((i % 33) == 0)
+        if ((i % 3333) == 0)
         {
-            calibTab[i/33 - 1] = ADC0.RES;
-            printf(".\r\n");
-            printf("%d\r\n", calibTab[i/33 - 1]);
+            calibTab[i/3333 - 1] = ADC0.RES;
+            printf("%d\r\n", calibTab[i/3333 - 1]);
         }
         // Allowing next adc conversion begin
         ADC0.INTFLAGS = ADC_RESRDY_bm;
@@ -282,7 +280,7 @@ int main(void)
             cli();
             // rpm calculated from rotations (60 because reading value twice a 
             // second *120 but propeller has two wings /2 so *60)
-            rpm = rotations*60;
+            rpm = rotations*120;
             // testing
             printf("%i rpm\r\n", rpm);
             // Counting first digit from rpm
@@ -310,6 +308,8 @@ int main(void)
                 // Disable global interrupts to update propeller
                 cli();
                 rotations++;
+                //printf("%i\r\n",rotations);
+                //printf("%i\r\n",adcValue);
                 isPropOn = 2;
                 // Enable global interrupts
                 sei();
