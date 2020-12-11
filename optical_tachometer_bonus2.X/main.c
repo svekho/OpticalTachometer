@@ -280,8 +280,8 @@ int main(void)
             // Disable interrupts for segment updating
             cli();
             // rpm calculated from rotations 
-            //(120 because observation interval is 0,5s)
-            rpm = rotations*120;
+            //(60 because observation interval is 1s)
+            rpm = rotations*60;
             // testing
             printf("%i rpm\r\n", rpm);
             // Updating display to msd

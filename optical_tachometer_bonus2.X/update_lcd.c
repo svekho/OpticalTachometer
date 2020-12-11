@@ -1,3 +1,4 @@
+#define F_CPU 3333333
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdio.h>
@@ -12,22 +13,23 @@ void update_lcd(int rpm)
     int num = 0;
     // Counting how many chars will be in array, dividing with 10 to move
     // towards the final digit of rpm (+1 for each round to num)
-    while(rpm != 0)
+    do
     {
         rpm = rpm/10;
         num++;
     }
+    while(rpm != 0);
     // String for rpm value to be printed in LCD (+1 for null)
-    char rpmValue[num+1];
+    unsigned char rpmValue[num+1];
     // Setting the rpm value to the array (reversed because we are printing)
     // them to LCD next in ascending order
-    for (int i=num; i>=0; i--)
+    for (int i=num-1; i>=0; i--)
     {
         rpmValue[i] = rpmOriginal%10;
         rpmOriginal = rpmOriginal/10;
     }
     // String to be printed after rpm value
-    char rpmString[4] = "RPM";
+    unsigned char rpmString[4] = "RPM";
     
     // Clear display
     PORTD.OUT = 0x01;
@@ -49,6 +51,7 @@ void update_lcd(int rpm)
         PORTD.OUT = rpmValue[k];
         PORTB.OUT |= PIN4_bm;
         PORTB.OUT |= PIN3_bm;
+        _delay_us(1);
         PORTB.OUT &= ~PIN3_bm;
         _delay_ms(20);
     }
@@ -58,6 +61,7 @@ void update_lcd(int rpm)
         PORTD.OUT = rpmString[j];
         PORTB.OUT |= PIN4_bm;
         PORTB.OUT |= PIN3_bm;
+        _delay_us(1);
         PORTB.OUT &= ~PIN3_bm;
         _delay_ms(20);
     }
