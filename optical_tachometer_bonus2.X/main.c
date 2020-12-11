@@ -159,17 +159,21 @@ void ADC_init(void)
 // Initialize LCD
 void LCD_init(void)
 {
-    // 7-segment display configurations
+    // Configuring pins LCD uses as outputs
+    VPORTB.DIR |= PIN3_bm;
+    VPORTB.DIR |= PIN4_bm;
+    VPORTB.DIR |= PIN5_bm;
+    VPORTD.DIR |= PIN0_bm;
+    VPORTD.DIR |= PIN1_bm;
+    VPORTD.DIR |= PIN2_bm;
+    VPORTD.DIR |= PIN3_bm;
+    VPORTD.DIR |= PIN4_bm;
+    VPORTD.DIR |= PIN5_bm;
+    VPORTD.DIR |= PIN6_bm;
+    VPORTD.DIR |= PIN7_bm;
     
-    // Port C configured as an output
-    VPORTC.DIR |= PIN0_bm;
-    VPORTC.DIR |= PIN1_bm;
-    VPORTC.DIR |= PIN2_bm;
-    VPORTC.DIR |= PIN3_bm;
-    VPORTC.DIR |= PIN4_bm;
-    VPORTC.DIR |= PIN5_bm;
-    VPORTC.DIR |= PIN6_bm;
-    VPORTC.DIR |= PIN7_bm;
+    // Enable backlight and signal
+    VPORTB.OUT |= PIN5_bm | PIN3_bm;
 }
 
 // RTC interrupt
