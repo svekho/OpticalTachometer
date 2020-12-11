@@ -10,7 +10,7 @@
 #define MIN_VOLT_DIFF (30)
 #define LWR_THRESH (5)
 #include <xc.h>
-#include "update_display.h"
+#include "update_lcd.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/cpufunc.h>
@@ -24,7 +24,7 @@ static int USART0_printChar(char c, FILE *stream);
 static void USART0_init(void);
 void RTC_init(void);
 void ADC_init(void);
-void SEGMENT_init(void);
+void LCD_init(void);
 void calibrate_threshold(void);
 
 // Global variable to store adc result
@@ -157,7 +157,7 @@ void ADC_init(void)
     
 }
 // Initialize 7-segment display
-void SEGMENT_init(void)
+void LCD_init(void)
 {
     // 7-segment display configurations
     
@@ -253,7 +253,7 @@ int main(void)
     // Initialize output to putty
     USART0_init();
     // Initialize 7-segment display
-    SEGMENT_init();
+    LCD_init();
     // Initialize ADC and its input pin
     ADC_init();
     // Initialize RTC
@@ -292,7 +292,7 @@ int main(void)
             }
             msd = rpm;
             // Updating display to msd
-            update_display(msd);
+            update_lcd(msd);
             // Resetting rpm and rotations for next round
             rpm = 0;
             rotations=0;
