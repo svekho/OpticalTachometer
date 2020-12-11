@@ -37,8 +37,8 @@ uint8_t msd;
 // int to check if the propeller is in front of the LDR, and makes sure, the 
 // propeller is only counted once
 volatile uint8_t isPropOn;
-// Checking whether should update display or calculate rotations from adc
-volatile uint8_t segmentUpdate;
+// Checking whether should update LCD or calculate rotations from adc
+volatile uint8_t lcdUpdate;
 // Value for storing the voltage level used as indicator whether there is a 
 // propellor in front of the LDR or not.
 uint16_t voltThreshold;
@@ -122,9 +122,9 @@ void RTC_init(void)
     RTC.DBGCTRL = RTC_DBGRUN_bm;
     // Enable periodic interrupt
     RTC.PITINTCTRL = RTC_PI_bm;
-    // Selecting number of RTC clock cycles (16384) because we want interrupt
-    // twice a second and enable periodic interrupt timer
-    RTC.PITCTRLA = RTC_PERIOD_CYC16384_gc | RTC_PITEN_bm;
+    // Selecting number of RTC clock cycles (32768) because we want interrupt
+    // once a second and enable periodic interrupt timer
+    RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc | RTC_PITEN_bm;
 }
 
 // Configuring ADC
@@ -156,7 +156,7 @@ void ADC_init(void)
     ADC0.INTCTRL |= ADC_RESRDY_bm;
     
 }
-// Initialize 7-segment display
+// Initialize LCD
 void LCD_init(void)
 {
     // 7-segment display configurations
@@ -177,8 +177,8 @@ ISR(RTC_PIT_vect)
 {
     // Clearing interrupt flag
     RTC.PITINTFLAGS = RTC_PI_bm;
-    // Segment needs to be updated
-    segmentUpdate = 1;
+    // LCD needs to be updated
+    lcdUpdate = 1;
 }
 
 // ADC interrupt, ADC conversion is done
@@ -201,8 +201,8 @@ ISR(ADC0_RESRDY_vect)
     {
         isPropOn = 0;
     }
-    // No segment updating
-    segmentUpdate = 2;
+    // No LCD updating
+    lcdUpdate = 2;
 }
 
 // Calibrates the threshold for light vs dark, depending on current lighting.
@@ -247,12 +247,12 @@ int main(void)
     uint16_t rpm = 0;
     msd = 0;
     isPropOn = 0;
-    segmentUpdate = 0;
+    lcdUpdate = 0;
     // Setting internal reference voltage to 1.5V
     VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
     // Initialize output to putty
     USART0_init();
-    // Initialize 7-segment display
+    // Initialize LCD
     LCD_init();
     // Initialize ADC and its input pin
     ADC_init();
@@ -274,8 +274,8 @@ int main(void)
     {
         // Entering sleep mode every time after wake up
         sleep_mode();
-        // Checking whether the interrupt was about segment updating
-        if (segmentUpdate == 1)
+        // Checking whether the interrupt was about LCD updating
+        if (lcdUpdate == 1)
         {
             // Disable interrupts for segment updating
             cli();
@@ -300,7 +300,7 @@ int main(void)
             sei();
         }
         // Checking whether interrupt was from result-ready adc
-        else if (segmentUpdate == 2)
+        else if (lcdUpdate == 2)
         {
             //when the propeller is not in front of the LDR, the
             // rotations value is updated.
