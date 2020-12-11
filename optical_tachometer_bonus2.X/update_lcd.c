@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <string.h>
+#include <stdio.h>
 
 void update_lcd(int rpm)
 
