@@ -1,6 +1,7 @@
+#define F_CPU 3333333
+
 #include <avr/io.h>
 #include <util/delay.h>
-#include <stdio.h>
 #include <string.h>
 
 void update_lcd(int rpm)
