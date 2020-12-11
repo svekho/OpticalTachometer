@@ -189,7 +189,7 @@ ISR(ADC0_RESRDY_vect)
     // Setting the value adc measured
     adcValue = ADC0.RES;
     //AdcValue: propeller is in front of LDR, calibrated in the beginning
-    if (adcValue> (voltThreshold - LWR_THRESH))
+    if (adcValue>voltThreshold)
     {
         //makes sure the rotations are only updated once per rotation
         if(isPropOn == 0)
@@ -197,7 +197,7 @@ ISR(ADC0_RESRDY_vect)
             isPropOn=1;
         }
     }
-    else if (adcValue<voltThreshold-5)
+    else if (adcValue<(voltThreshold - LWR_THRESH))
     {
         isPropOn = 0;
     }

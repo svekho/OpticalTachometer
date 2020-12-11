@@ -31,9 +31,6 @@ void calibrate_threshold(void);
 volatile uint16_t adcValue;
 // Variable to count rotations
 volatile uint16_t rotations;
-// Global variable msd (indicates most significant digit
-// value of rotating propeller rpm)
-uint8_t msd;
 // int to check if the propeller is in front of the LDR, and makes sure, the 
 // propeller is only counted once
 volatile uint8_t isPropOn;
@@ -172,8 +169,8 @@ void LCD_init(void)
     VPORTD.DIR |= PIN6_bm;
     VPORTD.DIR |= PIN7_bm;
     
-    // Enable backlight and signal
-    VPORTB.OUT |= PIN5_bm | PIN3_bm;
+    // Enable backlight
+    VPORTB.OUT |= PIN5_bm;
 }
 
 // RTC interrupt
@@ -193,7 +190,7 @@ ISR(ADC0_RESRDY_vect)
     // Setting the value adc measured
     adcValue = ADC0.RES;
     //AdcValue: propeller is in front of LDR, calibrated in the beginning
-    if (adcValue> (voltThreshold - LWR_THRESH))
+    if (adcValue>voltThreshold)
     {
         //makes sure the rotations are only updated once per rotation
         if(isPropOn == 0)
@@ -201,7 +198,7 @@ ISR(ADC0_RESRDY_vect)
             isPropOn=1;
         }
     }
-    else if (adcValue<voltThreshold-5)
+    else if (adcValue<(voltThreshold - LWR_THRESH))
     {
         isPropOn = 0;
     }
@@ -249,7 +246,6 @@ int main(void)
     rotations = 0;
     // Variable to store the rpm calculated from rotations
     uint16_t rpm = 0;
-    msd = 0;
     isPropOn = 0;
     lcdUpdate = 0;
     // Setting internal reference voltage to 1.5V
@@ -288,15 +284,8 @@ int main(void)
             rpm = rotations*120;
             // testing
             printf("%i rpm\r\n", rpm);
-            // Counting first digit from rpm
-            while(rpm >=10)
-            {
-            // Dividing with 10 until only one number is left -> msd
-            rpm = rpm / 10;
-            }
-            msd = rpm;
             // Updating display to msd
-            update_lcd(msd);
+            update_lcd(rpm);
             // Resetting rpm and rotations for next round
             rpm = 0;
             rotations=0;
