@@ -1,5 +1,5 @@
 /* 
- * File:   update_display.h
+ * File:   update_lcd.h
  * Author: dtek0068
  *
  * Created on 04 December 2020, 14:26
