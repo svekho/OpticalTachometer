@@ -8,6 +8,7 @@
 #define USART0_BAUD_RATE(BAUD_RATE) \
     ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
 #define MIN_VOLT_DIFF (30)
+#define LWR_THRESH (5)
 #include <xc.h>
 #include "update_display.h"
 #include <avr/io.h>
@@ -188,7 +189,7 @@ ISR(ADC0_RESRDY_vect)
     // Setting the value adc measured
     adcValue = ADC0.RES;
     //AdcValue: propeller is in front of LDR, calibrated in the beginning
-    if (adcValue>voltThreshold)
+    if (adcValue> (voltThreshold - LWR_THRESH))
     {
         //makes sure the rotations are only updated once per rotation
         if(isPropOn == 0)
@@ -278,8 +279,8 @@ int main(void)
         {
             // Disable interrupts for segment updating
             cli();
-            // rpm calculated from rotations (60 because reading value twice a 
-            // second *120 but propeller has two wings /2 so *60)
+            // rpm calculated from rotations 
+            //(120 because observation interval is 0,5s)
             rpm = rotations*120;
             // testing
             printf("%i rpm\r\n", rpm);
