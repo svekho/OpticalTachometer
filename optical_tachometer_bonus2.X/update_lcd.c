@@ -8,21 +8,24 @@ void update_lcd(int rpm)
 
 {
     // Placeholder for calculated rpm
-    int rpmOriginal = rpm;
+    int rpmOriginal = rpm; 
     // This will be the number of elements in an array
-    int num = 0;
+    int num = 0; 
     // Counting how many chars will be in array, dividing with 10 to move
     // towards the final digit of rpm (+1 for each round to num)
-    while(rpm != 0)
+    do
     {
         rpm = rpm/10;
         num++;
     }
+    while(rpm != 0);
+ 
     // String for rpm value to be printed in LCD (+1 for null)
     char rpmValue[num+1];
     // Setting the rpm value to the array (reversed because we are printing)
-    // them to LCD next in ascending order
-    for (int i=num; i>=0; i--)
+    // them to LCD next in descending order
+    rpmValue[num]='\0';
+    for (int i=num-1; i>=0; i--)
     {
         rpmValue[i] = rpmOriginal%10;
         rpmOriginal = rpmOriginal/10;
