@@ -270,12 +270,13 @@ void calibrate_threshold(void)
     return;
 }
 
+// Initializes motor pins
 void propellor_init(void)
 {
-    //output to DC motor chip
+    // Output to DC motor chip
     VPORTA.DIR |= PIN2_bm;
     VPORTA.DIR |= PIN3_bm;
-    
+    // Both are off in the beginning
     VPORTA.OUT &= ~PIN2_bm;
     VPORTA.OUT &= ~PIN3_bm;
 }
@@ -302,7 +303,7 @@ int main(void)
     RTC_init();
     // Initialize PWM clock
     PWM_CLOCK_init();
-    //
+    // Initializing motor pins
     propellor_init();
     // Initialize TCB to 8-bit PWM mode(and its output pin)
     TCB_init();
