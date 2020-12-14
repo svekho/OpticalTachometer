@@ -25,10 +25,9 @@ static void USART0_init(void);
 void RTC_init(void);
 void ADC_init(void);
 void SEGMENT_init(void);
-void PWM_CLOCK_init(void);
-void TCB_init(void);
 void calibrate_threshold(void);
 void propellor_init(void);
+void potentiometer_init(void);
 
 // Global variable to store adc result
 volatile uint16_t adcValue;
@@ -45,6 +44,8 @@ volatile uint8_t segmentUpdate;
 // Value for storing the voltage level used as indicator whether there is a 
 // propellor in front of the LDR or not.
 uint16_t voltThreshold;
+// Indicates potentiometer value user wants to give for spinning speed
+uint8_t userVoltage;
 
 // Fuction for sending text to computer terminal/putty
 static void USART0_sendChar(char c)
@@ -168,41 +169,6 @@ void SEGMENT_init(void)
     VPORTC.DIR |= (PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm | PIN5_bm);
     VPORTC.DIR |= (PIN6_bm | PIN7_bm);
 }
-// Initialize clock for TCB's PWM mode
-void PWM_CLOCK_init(void)
-{
-    // Enable writing to protected register
-    CPU_CCP = CCP_IOREG_gc;
-    // Selecting highest prescaler division (64), and enable prescaler
-    CLKCTRL.MCLKCTRLB = CLKCTRL_PDIV_64X_gc | CLKCTRL_PEN_bm;
-    
-    // Enable writing to protected register again
-    CPU_CCP = CCP_IOREG_gc;
-    // Selecting the source for main clock, ultra low power oscillator
-    CLKCTRL.MCLKCTRLA = CLKCTRL_CLKSEL_OSCULP32K_gc;
-    
-    // Waiting for system oscillator change to finish, halting for waiting time
-    while (CLKCTRL.MCLKSTATUS & CLKCTRL_SOSC_bm)
-    {
-        ;
-    }
-}
-
-// Initialize TCB PWM mode and output pin (to motor) for PWM signals
-void TCB_init(void)
-{
-    // Configure correct pin as output to DC motor, and first as low
-    VPORTA.DIR |= PIN2_bm;
-    VPORTA.OUT &= ~PIN2_bm;
-    
-    // Duty cycle 50 % (CCMPH = 0x80), PWM signal period 1 sec (CCMPL = 0xFF)
-    TCB3.CCMP = 0x80FF;
-    // Enable TCB, and divide clock more with 2
-    TCB3.CTRLA |= TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc;
-    // Enable output signal of Compare/Capture, and TCB configured in 
-    // 8-bit PWM mode
-    TCB3.CTRLB |= TCB_CCMPEN_bm | TCB_CNTMODE_PWM8_gc;
-}
 
 // RTC interrupt
 ISR(RTC_PIT_vect)
@@ -281,6 +247,12 @@ void propellor_init(void)
     VPORTA.OUT &= ~PIN3_bm;
 }
 
+// Initialize potentiometer's pin and set it as input
+void potentiometer_init(void)
+{
+    VPORTF.DIR &= ~PIN4_bm;
+}
+
 int main(void) 
 {
     // In the beginning the value of parameters is 0
@@ -291,6 +263,7 @@ int main(void)
     msd = 0;
     isPropOn = 0;
     segmentUpdate = 0;
+    userVoltage = 0;
     // Setting internal reference voltage to 1.5V
     VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
     // Initialize output to putty
@@ -301,12 +274,10 @@ int main(void)
     ADC_init();
     // Initialize RTC
     RTC_init();
-    // Initialize PWM clock
-    PWM_CLOCK_init();
     // Initializing motor pins
     propellor_init();
-    // Initialize TCB to 8-bit PWM mode(and its output pin)
-    TCB_init();
+    // Initialize potentiometer
+    potentiometer_init();
    
     // Setting IDLE as sleep mode
     set_sleep_mode(SLPCTRL_SMODE_IDLE_gc);
@@ -361,6 +332,8 @@ int main(void)
                 //printf("%i\r\n",rotations);
                 //printf("%i\r\n",adcValue);
                 isPropOn = 2;
+                userVoltage=0;
+                update_spin(userVoltage);
                 // Enable global interrupts
                 sei();
             }
