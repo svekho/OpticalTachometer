@@ -1,7 +1,7 @@
 /*
  * File:   main.c
  * Author: Sandra Ekholm, Amy Nymalm and Nea Kontturi
- *
+ * BONUS 1!!!!!!!
  * Created on 02 December 2020, 13:32
  */
 #define F_CPU 3333333
