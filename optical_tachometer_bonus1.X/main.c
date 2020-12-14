@@ -278,6 +278,8 @@ int main(void)
     // Calibrates current lighting without anything in front of the LDR
     calibrate_threshold();
     
+    propellor_start();
+    
     // Enable global interrupts
     sei();
     
