@@ -280,11 +280,15 @@ int main(void)
             // Disable interrupts for segment updating
             cli();
             // rpm calculated from rotations 
+<<<<<<< HEAD
             //(60 because observation interval is 1s)
+=======
+            //(60 because observation interval is 1,0s)
+>>>>>>> 7f86f4e9acf98f7e5c408d730ec78ab0dd005aa9
             rpm = rotations*60;
             // testing
             printf("%i rpm\r\n", rpm);
-            // Updating display to msd
+            // Updating display to RPM
             update_lcd(rpm);
             // Resetting rpm and rotations for next round
             rpm = 0;
