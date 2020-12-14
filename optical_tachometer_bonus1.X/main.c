@@ -28,6 +28,7 @@ void SEGMENT_init(void);
 void PWM_CLOCK_init(void);
 void TCB_init(void);
 void calibrate_threshold(void);
+void propellor_init(void);
 
 // Global variable to store adc result
 volatile uint16_t adcValue;
@@ -269,6 +270,17 @@ void calibrate_threshold(void)
     return;
 }
 
+// Initializes motor pins
+void propellor_init(void)
+{
+    // Output to DC motor chip
+    VPORTA.DIR |= PIN2_bm;
+    VPORTA.DIR |= PIN3_bm;
+    // Both are off in the beginning
+    VPORTA.OUT &= ~PIN2_bm;
+    VPORTA.OUT &= ~PIN3_bm;
+}
+
 int main(void) 
 {
     // In the beginning the value of parameters is 0
@@ -291,6 +303,8 @@ int main(void)
     RTC_init();
     // Initialize PWM clock
     PWM_CLOCK_init();
+    // Initializing motor pins
+    propellor_init();
     // Initialize TCB to 8-bit PWM mode(and its output pin)
     TCB_init();
    
