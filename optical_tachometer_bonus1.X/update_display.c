@@ -3,6 +3,8 @@
 void update_display(int msd)
 {
     // Checking which number to play on 7-segment display
+    // HUOM KUN SIIVOTAAN NII pinie samanaikaisuutee t‰ytyy kiinnitt‰‰ huomioo
+    // esimerkki case 1 kohdal!!
     switch(msd)
     {
         case 0 :
@@ -24,6 +26,7 @@ void update_display(int msd)
             VPORTC.OUT &= ~PIN4_bm;
             VPORTC.OUT &= ~PIN5_bm;
             VPORTC.OUT &= ~PIN6_bm;
+            // VPORTC.OUT = (VPORTC.OUT | PIN7_bm | PIN1_bm | PIN2_bm) & ~(PIN0_bm | PIN3_bm | pin4_bm | pin5_bm | pin6_bm);
             break;
         case 2 :
             VPORTC.OUT |= PIN7_bm;
