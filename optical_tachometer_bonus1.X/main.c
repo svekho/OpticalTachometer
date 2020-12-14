@@ -25,6 +25,8 @@ static void USART0_init(void);
 void RTC_init(void);
 void ADC_init(void);
 void SEGMENT_init(void);
+void PWM_CLOCK_init(void);
+void TCB_init(void);
 void calibrate_threshold(void);
 void propellor_start(void);
 
@@ -163,14 +165,43 @@ void SEGMENT_init(void)
     // 7-segment display configurations
     
     // Port C configured as an output
-    VPORTC.DIR |= PIN0_bm;
-    VPORTC.DIR |= PIN1_bm;
-    VPORTC.DIR |= PIN2_bm;
-    VPORTC.DIR |= PIN3_bm;
-    VPORTC.DIR |= PIN4_bm;
-    VPORTC.DIR |= PIN5_bm;
-    VPORTC.DIR |= PIN6_bm;
-    VPORTC.DIR |= PIN7_bm;
+    VPORTC.DIR |= (PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm | PIN5_bm);
+    VPORTC.DIR |= (PIN6_bm | PIN7_bm);
+}
+// Initialize clock for TCB's PWM mode
+void PWM_CLOCK_init(void)
+{
+    // Enable writing to protected register
+    CPU_CCP = CCP_IOREG_gc;
+    // Selecting highest prescaler division (64), and enable prescaler
+    CLKCTRL.MCLKCTRLB = CLKCTRL_PDIV_64X_gc | CLKCTRL_PEN_bm;
+    
+    // Enable writing to protected register again
+    CPU_CCP = CCP_IOREG_gc;
+    // Selecting the source for main clock, ultra low power oscillator
+    CLKCTRL.MCLKCTRLA = CLKCTRL_CLKSEL_OSCULP32K_gc;
+    
+    // Waiting for system oscillator change to finish, halting for waiting time
+    while (CLKCTRL.MCLKSTATUS & CLKCTRL_SOSC_bm)
+    {
+        ;
+    }
+}
+
+// Initialize TCB PWM mode and output pin (to motor) for PWM signals
+void TCB_init(void)
+{
+    // Configure correct pin as output to DC motor, and first as low
+    VPORTA.DIR |= PIN2_bm;
+    VPORTA.OUT &= ~PIN2_bm;
+    
+    // Duty cycle 50 % (CCMPH = 0x80), PWM signal period 1 sec (CCMPL = 0xFF)
+    TCB3.CCMP = 0x80FF;
+    // Enable TCB, and divide clock more with 2
+    TCB3.CTRLA |= TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc;
+    // Enable output signal of Compare/Capture, and TCB configured in 
+    // 8-bit PWM mode
+    TCB3.CTRLB |= TCB_CCMPEN_bm | TCB_CNTMODE_PWM8_gc;
 }
 
 // RTC interrupt
@@ -269,6 +300,10 @@ int main(void)
     ADC_init();
     // Initialize RTC
     RTC_init();
+    // Initialize PWM clock
+    PWM_CLOCK_init();
+    // Initialize TCB to 8-bit PWM mode(and its output pin)
+    TCB_init();
    
     // Setting IDLE as sleep mode
     set_sleep_mode(SLPCTRL_SMODE_IDLE_gc);
