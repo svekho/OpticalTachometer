@@ -26,6 +26,7 @@ void RTC_init(void);
 void ADC_init(void);
 void SEGMENT_init(void);
 void calibrate_threshold(void);
+void propellor_start(void);
 
 // Global variable to store adc result
 volatile uint16_t adcValue;
@@ -236,6 +237,16 @@ void calibrate_threshold(void)
     printf("Calibration complete!\r\n");
     printf("Threshold voltage: %i\r\n\n", voltThreshold);
     return;
+}
+
+void propellor_start(void)
+{
+    //output to DC motor chip
+    VPORTA.DIR |= PIN2_bm;
+    VPORTA.DIR |= PIN3_bm;
+    
+    VPORTA.OUT |= PIN2_bm;
+    VPORTA.OUT &= ~PIN3_bm;
 }
 
 int main(void) 
