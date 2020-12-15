@@ -402,8 +402,8 @@ int main(void)
         else if (segmentUpdate == 3)
         {
             cli();
-            // Tähän potentiometer arvo
-            userVoltage = adcValue;
+            // Tähän potentiometer arvo muutettu 8 bittiseks
+            userVoltage = adcValue>>2;
             update_spin(userVoltage);
             // Switching ADC channel back to LDR
             ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
