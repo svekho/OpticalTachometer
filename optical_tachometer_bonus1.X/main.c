@@ -351,7 +351,7 @@ int main(void)
             cli();
             // rpm calculated from rotations 
             //(120 because observation interval is 0,5s)
-            rpm = rotations*120;
+            rpm = rotations;
             // testing
             printf("%i rpm\r\n", rpm);
             // Counting first digit from rpm
