@@ -9,6 +9,7 @@
     ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
 #define MIN_VOLT_DIFF (30)
 #define LWR_THRESH (5)
+
 #include <xc.h>
 #include "update_display.h"
 #include "update_spin.h"
@@ -28,6 +29,8 @@ void ADC_init(void);
 void SEGMENT_init(void);
 void calibrate_threshold(void);
 void propellor_init(void);
+void PWM_CLOCK_init(void);
+void TCB_init(void);
 
 // Global variable to store adc result
 volatile uint16_t adcValue;
@@ -46,7 +49,7 @@ volatile uint8_t segmentUpdate;
 uint16_t voltThreshold;
 // Indicates potentiometer value user wants to give for spinning speed
 uint8_t userVoltage;
-// Indicates whether we are going to measure LDR or potentiometer, every 10th
+// Indicates whether we are going to measure LDR or potentiometer, every 100th
 // time we need to read potentiometer
 volatile uint8_t potentRead;
 
@@ -174,6 +177,44 @@ void SEGMENT_init(void)
     VPORTC.DIR |= (PIN6_bm | PIN7_bm);
 }
 
+// Initialize clock for TCB's PWM mode
+void PWM_CLOCK_init(void)
+{
+    // Enable writing to protected register
+    CPU_CCP = CCP_IOREG_gc;
+    // Selecting highest prescaler division (64) because clock must be as low 
+    // as possible, and enable prescaler
+    CLKCTRL.MCLKCTRLB = CLKCTRL_PDIV_64X_gc | CLKCTRL_PEN_bm;
+
+    // Enable writing to protected register again
+    CPU_CCP = CCP_IOREG_gc;
+    // Selecting the source for main clock, ultra low power oscillator
+    CLKCTRL.MCLKCTRLA = CLKCTRL_CLKSEL_OSCULP32K_gc;
+
+    // Waiting for system oscillator change to finish, halting for waiting time
+    while (CLKCTRL.MCLKSTATUS & CLKCTRL_SOSC_bm)
+    {
+        ;
+    }
+}
+
+// Initialize TCB PWM mode and output pin (to motor) for PWM signals
+void TCB_init(void)
+{
+    // Configure correct pin as output to DC motor, and first as low
+    VPORTA.DIR |= PIN2_bm;
+    VPORTA.OUT &= ~PIN2_bm;
+
+    // Duty cycle 50 % first (CCMPH = 0x80), PWM signal period 1 sec 
+    // (CCMPL = 0xFF)
+    TCB3.CCMP = 0x80FF;
+    // Enable TCB, and divide clock more with 2 to get lowest possible freq
+    TCB3.CTRLA |= TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc;
+    // Enable output signal of Compare/Capture, and TCB configured in 
+    // 8-bit PWM mode
+    TCB3.CTRLB |= TCB_CCMPEN_bm | TCB_CNTMODE_PWM8_gc;
+}
+
 // RTC interrupt
 ISR(RTC_PIT_vect)
 {
@@ -190,7 +231,7 @@ ISR(ADC0_RESRDY_vect)
     ADC0.INTFLAGS = ADC_RESRDY_bm;
     // Setting the value adc measured
     adcValue = ADC0.RES;
-    if (potentRead == 10)
+    if (potentRead == 100)
     {
         // Updating the propellor
         segmentUpdate = 3;
@@ -281,6 +322,10 @@ int main(void)
     ADC_init();
     // Initialize RTC
     RTC_init();
+    // Initialize PWM clock
+    PWM_CLOCK_init();
+    // Initialize TCB to 8-bit PWM mode(and its output pin)
+    TCB_init();
     // Initializing motor pins
     propellor_init();
    
@@ -339,7 +384,7 @@ int main(void)
                 sei();
             }
             // Checking if next conversion shall be taken from potentiometer
-            if (potentRead == 9)
+            if (potentRead == 99)
             {
                 cli();
                 // Switching ADC channel to potentiometer
