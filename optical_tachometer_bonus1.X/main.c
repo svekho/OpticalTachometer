@@ -28,7 +28,6 @@ void ADC_init(void);
 void SEGMENT_init(void);
 void calibrate_threshold(void);
 void propellor_init(void);
-void potentiometer_init(void);
 
 // Global variable to store adc result
 volatile uint16_t adcValue;
@@ -47,8 +46,8 @@ volatile uint8_t segmentUpdate;
 uint16_t voltThreshold;
 // Indicates potentiometer value user wants to give for spinning speed
 uint8_t userVoltage;
-// Indicates whether we are going to measure LDR or potentiometer, if modulo 10
-// is 0, we need to read potentiometer
+// Indicates whether we are going to measure LDR or potentiometer, every 10th
+// time we need to read potentiometer
 volatile uint8_t potentRead;
 
 // Fuction for sending text to computer terminal/putty
@@ -271,8 +270,7 @@ int main(void)
     isPropOn = 0;
     segmentUpdate = 0;
     userVoltage = 0;
-    // 1 because first we will read LDR (if modulo 10 = 0 we read potentiometer)
-    potentRead = 1;
+    potentRead = 0;
     // Setting internal reference voltage to 1.5V
     VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
     // Initialize output to putty
