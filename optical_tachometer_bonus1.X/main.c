@@ -28,7 +28,6 @@ void RTC_init(void);
 void ADC_init(void);
 void SEGMENT_init(void);
 void calibrate_threshold(void);
-void propellor_init(void);
 void TCB_init(void);
 
 // Global variable to store adc result
@@ -181,16 +180,51 @@ void TCB_init(void)
 {
     // Configure correct pin as output to DC motor, and first as low
     VPORTA.DIR |= PIN2_bm;
-    VPORTA.OUT &= ~PIN2_bm;
+    VPORTA.OUT |= PIN2_bm;
 
     // Duty cycle 50 % first (CCMPH = 0x80), PWM signal period 1 sec 
     // (CCMPL = 0xFF)
-    TCB3.CCMP = 0x80FF;
+    TCB0.CCMP = 0xFF80;
     // Enable TCB, and divide clock with 2
-    TCB3.CTRLA |= TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc;
+    TCB0.CTRLA |= TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc;
     // Enable output signal of Compare/Capture, and TCB configured in 
     // 8-bit PWM mode
-    TCB3.CTRLB |= TCB_CCMPEN_bm | TCB_CNTMODE_PWM8_gc;
+    TCB0.CTRLB |= TCB_CCMPEN_bm | TCB_CNTMODE_PWM8_gc;
+    // Also runs in sleep mode
+    TCB0.CTRLA |= TCB_RUNSTDBY_bm;
+}
+
+// Calibrates the threshold for light vs dark, depending on current lighting.
+void calibrate_threshold(void)
+{
+    // temporary values for calibration (array)
+    int calibTab [4] = {0};
+    
+    printf("Calibrating lighting, one moment...\r\n");
+    
+    // Measuring current light conditions in ldr environment 100 times
+    for (int i = 0; i<=9999; i++)
+    {
+        // Waiting adc result to be ready
+        while (!(ADC0.INTFLAGS & ADC_RESRDY_bm))
+        {
+            ;
+        }
+        // Setting every 33th measured value to the array
+        if ((i % 3333) == 0)
+        {
+            calibTab[i/3333 - 1] = ADC0.RES;
+            printf("%d\r\n", calibTab[i/3333 - 1]);
+        }
+        // Allowing next adc conversion begin
+        ADC0.INTFLAGS = ADC_RESRDY_bm;
+    }
+
+    //set voltThreshold a little bit above the average of the calibration values
+    voltThreshold = (calibTab[0]+calibTab[1]+calibTab[2])/3 + MIN_VOLT_DIFF;
+    printf("Calibration complete!\r\n");
+    printf("Threshold voltage: %i\r\n\n", voltThreshold);
+    return;
 }
 
 // RTC interrupt
@@ -234,50 +268,6 @@ ISR(ADC0_RESRDY_vect)
     }
 }
 
-// Calibrates the threshold for light vs dark, depending on current lighting.
-void calibrate_threshold(void)
-{
-    // temporary values for calibration (array)
-    int calibTab [4] = {0};
-    
-    printf("Calibrating lighting, one moment...\r\n");
-    
-    // Measuring current light conditions in ldr environment 100 times
-    for (int i = 0; i<=9999; i++)
-    {
-        // Waiting adc result to be ready
-        while (!(ADC0.INTFLAGS & ADC_RESRDY_bm))
-        {
-            ;
-        }
-        // Setting every 33th measured value to the array
-        if ((i % 3333) == 0)
-        {
-            calibTab[i/3333 - 1] = ADC0.RES;
-            printf("%d\r\n", calibTab[i/3333 - 1]);
-        }
-        // Allowing next adc conversion begin
-        ADC0.INTFLAGS = ADC_RESRDY_bm;
-    }
-
-    //set voltThreshold a little bit above the average of the calibration values
-    voltThreshold = (calibTab[0]+calibTab[1]+calibTab[2])/3 + MIN_VOLT_DIFF;
-    printf("Calibration complete!\r\n");
-    printf("Threshold voltage: %i\r\n\n", voltThreshold);
-    return;
-}
-
-// Initializes motor pins
-void propellor_init(void)
-{
-    // Output to DC motor chip
-    VPORTA.DIR |= PIN2_bm;
-    VPORTA.DIR |= PIN3_bm;
-    // Both are off in the beginning
-    VPORTA.OUT &= ~PIN2_bm;
-    VPORTA.OUT &= ~PIN3_bm;
-}
-
 int main(void) 
 {
     // In the beginning the value of parameters is 0
@@ -302,8 +292,6 @@ int main(void)
     RTC_init();
     // Initialize TCB to 8-bit PWM mode(and its output pin)
     TCB_init();
-    // Initializing motor pins
-    propellor_init();
    
     // Setting IDLE as sleep mode
     set_sleep_mode(SLPCTRL_SMODE_IDLE_gc);
@@ -355,6 +343,7 @@ int main(void)
                 // Disable global interrupts to update propeller
                 cli();
                 rotations++;
+                //printf("%i rotations\r\n", rotations);
                 isPropOn = 2;
                 // Enable global interrupts
                 sei();
@@ -378,8 +367,9 @@ int main(void)
         else if (segmentUpdate == 3)
         {
             cli();
-            // Tähän potentiometer arvo muutettu 8 bittiseks
-            userVoltage = adcValue>>2;
+            // Potentiometer value changed from 10 bits to 8
+            userVoltage = ADC0.RES>>2;
+            // Updates motor speed
             update_spin(userVoltage);
             // Switching ADC channel back to LDR
             ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
