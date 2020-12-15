@@ -11,6 +11,7 @@
 #define LWR_THRESH (5)
 #include <xc.h>
 #include "update_display.h"
+#include "update_spin.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/cpufunc.h>
@@ -46,6 +47,9 @@ volatile uint8_t segmentUpdate;
 uint16_t voltThreshold;
 // Indicates potentiometer value user wants to give for spinning speed
 uint8_t userVoltage;
+// Indicates whether we are going to measure LDR or potentiometer, if modulo 10
+// is 0, we need to read potentiometer
+volatile uint16_t potentRead;
 
 // Fuction for sending text to computer terminal/putty
 static void USART0_sendChar(char c)
@@ -134,14 +138,15 @@ void RTC_init(void)
 // Configuring ADC
 void ADC_init(void)
 {
-    // Set port E pin 0 as input
+    // Set port E pin 0 as input for LDR and port F pin 4 for potentiometer
     PORTE.DIRCLR = PIN0_bm;
+    PORTF.DIRCLR = PIN4_bm;
     
     // Disable input buffer, pull-up resistor disabled by default 
     PORTE.PIN0CTRL |= PORT_ISC_INPUT_DISABLE_gc;
     
-    // Voltage reference is 1,5V (internal reference voltage already defined) 
-    // and prescaler of 16
+    // Voltage reference is 1,5V at first (internal reference voltage already
+    // defined) and prescaler of 16
     ADC0.CTRLC |= ADC_REFSEL_INTREF_gc | ADC_PRESC_DIV16_gc;
     
     // Resolution 10 bits
@@ -150,7 +155,7 @@ void ADC_init(void)
     // Enable ADC
     ADC0.CTRLA |= ADC_ENABLE_bm;
     
-    // Selecting AN8 (PE0) to be connected to ADC
+    // Selecting AN8 (PE0) to be connected to ADC (LDR will be connected first)
     ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
     
     // Freerun mode enabled (next conversion starts automatically)
@@ -186,21 +191,30 @@ ISR(ADC0_RESRDY_vect)
     ADC0.INTFLAGS = ADC_RESRDY_bm;
     // Setting the value adc measured
     adcValue = ADC0.RES;
-    //AdcValue: propeller is in front of LDR, calibrated in the beginning
-    if (adcValue>voltThreshold)
+    if ((potentRead%10) == 0)
     {
-        //makes sure the rotations are only updated once per rotation
-        if(isPropOn == 0)
+        // Updating the propellor
+        segmentUpdate = 3;
+    }
+    else
+    {
+        //AdcValue: propeller is in front of LDR, calibrated in the beginning
+        if (adcValue>voltThreshold)
         {
-            isPropOn=1;
+            //makes sure the rotations are only updated once per rotation
+            if(isPropOn == 0)
+            {
+                isPropOn=1;
+            }
         }
+        else if (adcValue<(voltThreshold - LWR_THRESH))
+        {
+            isPropOn = 0;
+        }
+        // No segment updating, LDR updating
+        segmentUpdate = 2;
     }
-    else if (adcValue<(voltThreshold - LWR_THRESH))
-    {
-        isPropOn = 0;
-    }
-    // No segment updating
-    segmentUpdate = 2;
+    potentRead++;
 }
 
 // Calibrates the threshold for light vs dark, depending on current lighting.
@@ -264,6 +278,8 @@ int main(void)
     isPropOn = 0;
     segmentUpdate = 0;
     userVoltage = 0;
+    // 1 because first we will read LDR (if modulo 10 = 0 we read potentiometer)
+    potentRead = 1;
     // Setting internal reference voltage to 1.5V
     VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
     // Initialize output to putty
@@ -319,7 +335,7 @@ int main(void)
             // Enable interrupts again
             sei();
         }
-        // Checking whether interrupt was from result-ready adc
+        // Checking whether interrupt was from result-ready adc (LDR)
         else if (segmentUpdate == 2)
         {
             //when the propeller is not in front of the LDR, the
@@ -329,14 +345,34 @@ int main(void)
                 // Disable global interrupts to update propeller
                 cli();
                 rotations++;
-                //printf("%i\r\n",rotations);
-                //printf("%i\r\n",adcValue);
                 isPropOn = 2;
-                userVoltage=0;
-                update_spin(userVoltage);
+                // Checking if next conversion shall be taken from potentiometer
+                if (((potentRead+1)%10) == 0)
+                {
+                    // Switching ADC channel to potentiometer
+                    ADC0.MUXPOS = ADC_MUXPOS_AIN14_gc;
+                    // Settling time for ADC to switch the channel
+                    _delay_us(5);
+                    // Setting new reference voltage (VDD)
+                    ADC0.CTRLC |= ADC_REFSEL_VDDREF_gc;
+                }
                 // Enable global interrupts
                 sei();
             }
+        }
+        else if (segmentUpdate == 3)
+        {
+            cli();
+            // Tähän potentiometer arvo
+            userVoltage = adcValue;
+            update_spin(userVoltage);
+            // Switching ADC channel back to LDR
+            ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
+            // Settling time for ADC to switch the channel
+            _delay_us(5);
+            // Setting reference voltage back 1.5 V for LDR
+            ADC0.CTRLC |= ADC_REFSEL_INTREF_gc;
+            sei();
         }
     }
     return 0;
