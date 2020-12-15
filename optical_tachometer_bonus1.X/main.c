@@ -306,7 +306,7 @@ int main(void)
             cli();
             // rpm calculated from rotations 
             //(120 because observation interval is 0,5s)
-            rpm = rotations*120;
+            rpm = rotations;
             // testing
             printf("%i rpm\r\n", rpm);
             // Counting first digit from rpm
@@ -345,7 +345,7 @@ int main(void)
                 // Switching ADC channel to potentiometer
                 ADC0.MUXPOS = ADC_MUXPOS_AIN14_gc;
                 // Settling time for ADC to switch the channel
-                _delay_us(5);
+                _delay_us(10);
                 // Setting new reference voltage (VDD)
                 ADC0.CTRLC |= ADC_REFSEL_VDDREF_gc;
                 sei();
@@ -363,7 +363,7 @@ int main(void)
             // Switching ADC channel back to LDR
             ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
             // Settling time for ADC to switch the channel
-            _delay_us(5);
+            _delay_us(10);
             // Setting reference voltage back 1.5 V for LDR
             ADC0.CTRLC |= ADC_REFSEL_INTREF_gc;
             potentRead = 0;
