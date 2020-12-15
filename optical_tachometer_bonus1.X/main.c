@@ -49,7 +49,7 @@ uint16_t voltThreshold;
 uint8_t userVoltage;
 // Indicates whether we are going to measure LDR or potentiometer, if modulo 10
 // is 0, we need to read potentiometer
-volatile uint16_t potentRead;
+volatile uint8_t potentRead;
 
 // Fuction for sending text to computer terminal/putty
 static void USART0_sendChar(char c)
@@ -191,7 +191,7 @@ ISR(ADC0_RESRDY_vect)
     ADC0.INTFLAGS = ADC_RESRDY_bm;
     // Setting the value adc measured
     adcValue = ADC0.RES;
-    if ((potentRead%10) == 0)
+    if (potentRead == 10)
     {
         // Updating the propellor
         segmentUpdate = 3;
@@ -214,7 +214,6 @@ ISR(ADC0_RESRDY_vect)
         // No segment updating, LDR updating
         segmentUpdate = 2;
     }
-    potentRead++;
 }
 
 // Calibrates the threshold for light vs dark, depending on current lighting.
@@ -259,12 +258,6 @@ void propellor_init(void)
     // Both are off in the beginning
     VPORTA.OUT &= ~PIN2_bm;
     VPORTA.OUT &= ~PIN3_bm;
-}
-
-// Initialize potentiometer's pin and set it as input
-void potentiometer_init(void)
-{
-    VPORTF.DIR &= ~PIN4_bm;
 }
 
 int main(void) 
@@ -346,19 +339,24 @@ int main(void)
                 cli();
                 rotations++;
                 isPropOn = 2;
-                // Checking if next conversion shall be taken from potentiometer
-                if (((potentRead+1)%10) == 0)
-                {
-                    // Switching ADC channel to potentiometer
-                    ADC0.MUXPOS = ADC_MUXPOS_AIN14_gc;
-                    // Settling time for ADC to switch the channel
-                    _delay_us(5);
-                    // Setting new reference voltage (VDD)
-                    ADC0.CTRLC |= ADC_REFSEL_VDDREF_gc;
-                }
                 // Enable global interrupts
                 sei();
             }
+            // Checking if next conversion shall be taken from potentiometer
+            if (potentRead == 9)
+            {
+                cli();
+                // Switching ADC channel to potentiometer
+                ADC0.MUXPOS = ADC_MUXPOS_AIN14_gc;
+                // Settling time for ADC to switch the channel
+                _delay_us(5);
+                // Setting new reference voltage (VDD)
+                ADC0.CTRLC |= ADC_REFSEL_VDDREF_gc;
+                sei();
+            }
+            cli();
+            potentRead++;
+            sei();
         }
         else if (segmentUpdate == 3)
         {
@@ -372,6 +370,7 @@ int main(void)
             _delay_us(5);
             // Setting reference voltage back 1.5 V for LDR
             ADC0.CTRLC |= ADC_REFSEL_INTREF_gc;
+            potentRead = 0;
             sei();
         }
     }
