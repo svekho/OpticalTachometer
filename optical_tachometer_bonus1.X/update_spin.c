@@ -2,5 +2,5 @@
 
 void update_spin(int userVoltage)
 {
-    
+    ;
 }
