@@ -285,8 +285,6 @@ int main(void)
     RTC_init();
     // Initializing motor pins
     propellor_init();
-    // Initialize potentiometer
-    potentiometer_init();
    
     // Setting IDLE as sleep mode
     set_sleep_mode(SLPCTRL_SMODE_IDLE_gc);
