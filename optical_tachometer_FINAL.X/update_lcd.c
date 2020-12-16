@@ -4,11 +4,12 @@
 #include <util/delay.h>
 #include <string.h>
 
-void update_lcd(uint16_t rpm)
+void update_lcd(int rpm)
 
 {
     // Placeholder for calculated rpm
-    uint16_t rpmOriginal = rpm;
+    int rpmOriginal = rpm;
+
     // This will be the number of elements in an array
     int num = 0; 
     // Counting how many chars will be in array, dividing with 10 to move
@@ -35,21 +36,20 @@ void update_lcd(uint16_t rpm)
     // String to be printed after rpm value
     char rpmString[4] = "RPM";
     
-    // DELAY ARVOT PIENEMMIKSI JOS VAAN PYSTYY, MIELELLÄÄN 1-5 MS
     
     // Clear display
     PORTD.OUT = 0x01;
     PORTB.OUT &= ~PIN4_bm;
     PORTB.OUT |= PIN3_bm;
     PORTB.OUT &= ~PIN3_bm;
-    _delay_ms(20);
+    _delay_ms(1);
     
     // Set cursor back at home position
     PORTD.OUT = 0x80;
     PORTB.OUT &= ~PIN4_bm;
     PORTB.OUT |= PIN3_bm;
     PORTB.OUT &= ~PIN3_bm;
-    _delay_ms(20);
+    _delay_ms(1);
     
     // Looping through rpmValue to print each number of rpm
     for (int k = 0; k<num ;k++)
@@ -58,7 +58,7 @@ void update_lcd(uint16_t rpm)
         PORTB.OUT |= PIN4_bm;
         PORTB.OUT |= PIN3_bm;
         PORTB.OUT &= ~PIN3_bm;
-        _delay_ms(20);
+        _delay_ms(1);
     }
     
     // Setting 'space' between numbers and "RPM"
@@ -66,7 +66,7 @@ void update_lcd(uint16_t rpm)
     PORTB.OUT |= PIN4_bm;
     PORTB.OUT |= PIN3_bm;
     PORTB.OUT &= ~PIN3_bm;
-    _delay_ms(20);
+    _delay_ms(1);
     
     // Looping through the characters of rpmString and printing them to LCD
     for (int j=0; j<3; j++)
@@ -75,7 +75,7 @@ void update_lcd(uint16_t rpm)
         PORTB.OUT |= PIN4_bm;
         PORTB.OUT |= PIN3_bm;
         PORTB.OUT &= ~PIN3_bm;
-        _delay_ms(20);
+        _delay_ms(1);
     }
     
 }
