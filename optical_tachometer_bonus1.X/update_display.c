@@ -40,7 +40,7 @@ void update_display(int msd)
             break;
         case 7 :
             VPORTC.OUT = (VPORTC.OUT|PIN7_bm|PIN0_bm|PIN1_bm|PIN2_bm) &~(PIN3_bm
-                          PIN4_bm|PIN5_bm|PIN6_bm);
+                          |PIN4_bm|PIN5_bm|PIN6_bm);
                           
             break;
         case 8 :
