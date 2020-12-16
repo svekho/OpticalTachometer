@@ -4,6 +4,8 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>update_lcd.h</itemPath>
+      <itemPath>update_spin.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -12,6 +14,9 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>main.c</itemPath>
+      <itemPath>update_lcd.c</itemPath>
+      <itemPath>update_spin.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -27,7 +32,7 @@
         <targetDevice>ATmega4809</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>noID</platformTool>
+        <platformTool></platformTool>
         <languageToolchain>XC8</languageToolchain>
         <languageToolchainVersion>2.30</languageToolchainVersion>
         <platform>2</platform>
