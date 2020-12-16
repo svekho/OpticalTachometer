@@ -40,7 +40,7 @@ void update_lcd(int rpm)
     PORTB.OUT &= ~PIN4_bm;
     PORTB.OUT |= PIN3_bm;
     PORTB.OUT &= ~PIN3_bm;
-    _delay_ms(20);
+    _delay_ms(20); // nää delayt täytyy olla pienempii... vois kokeilla 1-5, mut ainaki 10
     
     // Set cursor back at home position
     PORTD.OUT = 0x80;
