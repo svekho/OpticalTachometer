@@ -248,7 +248,7 @@ ISR(ADC0_RESRDY_vect)
     // Setting the value adc measured
     adcValue = ADC0.RES;
     
-    if (potentRead == 100)
+    if (potentRead == 10)
     {
         // Updating the propellor
         lcdUpdate = 3;
@@ -321,6 +321,7 @@ int main(void)
             // rpm calculated from rotations 
             //(60 because observation interval is 1,0s)
             rpm = rotations*60;
+            printf("%i rpm\r\n", adcValue);
             // Updating display to RPM
             update_lcd(rpm);
             // Resetting rpm and rotations for next round
@@ -344,7 +345,7 @@ int main(void)
                 sei();
             }
             // Checking if next conversion shall be taken from potentiometer
-            if (potentRead == 99)
+            if (potentRead == 9)
             {
                 cli();
                 // Switching ADC channel to potentiometer
@@ -353,6 +354,7 @@ int main(void)
                 _delay_us(10);
                 // Setting new reference voltage (VDD)
                 ADC0.CTRLC |= ADC_REFSEL_VDDREF_gc;
+                _delay_us(10);
                 potentRead++;
                 sei();
             }
@@ -370,12 +372,15 @@ int main(void)
             userVoltage = adcValue>>2;
             // Updates motor speed
             update_spin(userVoltage);
+            //printf("%i adcUservoltageeeeeeeeeen\r\n", adcValue);
+            //printf("%i \r\n", adcValue);
             // Switching ADC channel back to LDR
             ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
             // Settling time for ADC to switch the channel
             _delay_us(10);
             // Setting reference voltage back 1.5 V for LDR
             ADC0.CTRLC |= ADC_REFSEL_INTREF_gc;
+            _delay_us(10);
             potentRead = 0;
             sei();
         }

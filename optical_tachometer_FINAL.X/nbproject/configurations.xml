@@ -32,7 +32,11 @@
         <targetDevice>ATmega4809</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
+<<<<<<< HEAD
+        <platformTool>noID</platformTool>
+=======
         <platformTool>nEdbgTool</platformTool>
+>>>>>>> bbcf7cd0af3ed1fdc2252ea35ac36a4805d1295a
         <languageToolchain>XC8</languageToolchain>
         <languageToolchainVersion>2.30</languageToolchainVersion>
         <platform>2</platform>
