@@ -7,7 +7,7 @@
 void update_spin(uint8_t userVoltage)
 {
     // Variable to store hexadecimal value of given userVoltage
-    //uint8_t userHex ;
+    //uint8_t userHex;
     
     // Disable the peripheral
     TCB0.CTRLA &= ~TCB_ENABLE_bm;
