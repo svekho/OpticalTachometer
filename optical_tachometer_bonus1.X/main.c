@@ -184,7 +184,7 @@ void TCB_init(void)
 
     // Duty cycle 50 % first (CCMPH = 0x80), PWM signal period 1 sec 
     // (CCMPL = 0xFF)
-    TCB0.CCMP = 0xFF80;
+    TCB0.CCMP = 0x80FF;
     // Enable TCB, and divide clock with 2
     TCB0.CTRLA |= TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc;
     // Enable output signal of Compare/Capture, and TCB configured in 
@@ -358,11 +358,15 @@ int main(void)
                 _delay_us(10);
                 // Setting new reference voltage (VDD)
                 ADC0.CTRLC |= ADC_REFSEL_VDDREF_gc;
+                potentRead++;
                 sei();
             }
+            else
+            {
             cli();
             potentRead++;
             sei();
+            }
         }
         else if (segmentUpdate == 3)
         {
