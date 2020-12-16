@@ -11,7 +11,7 @@ void update_spin(uint8_t userVoltage)
     
     // Writing Capture/Compare register with new duty cycle based on
     // potentiometer
-    TCB0.CCMPL = userVoltage;
+    TCB0.CCMPH = userVoltage;
     
     // Reset count register
     TCB0.CNT = 0x0000;
