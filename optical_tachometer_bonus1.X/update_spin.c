@@ -1,5 +1,9 @@
 #include <avr/io.h>
-
+/**
+ * This function updates the TCB PWM duty cycle based on the parameter received
+ * from main.c. 
+ * @param userVoltage
+ */
 void update_spin(uint8_t userVoltage)
 {
     // Variable to store hexadecimal value of given userVoltage

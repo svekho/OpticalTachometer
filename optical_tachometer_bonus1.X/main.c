@@ -138,7 +138,8 @@ void RTC_init(void)
 // Configuring ADC
 void ADC_init(void)
 {
-    // Set port E pin 0 as input for LDR and port F pin 4 for potentiometer
+    // Set port E pin 0 as input for LDR and port F pin 4 input 
+    // for potentiometer
     PORTE.DIRCLR = PIN0_bm;
     PORTF.DIRCLR = PIN4_bm;
     
@@ -171,8 +172,8 @@ void SEGMENT_init(void)
     // 7-segment display configurations
     
     // Port C configured as an output
-    VPORTC.DIR |= (PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm | PIN5_bm);
-    VPORTC.DIR |= (PIN6_bm | PIN7_bm);
+    PORTC.OUTSET = PIN0_bm | PIN1_bm | PIN2_bm | PIN3_bm | PIN4_bm | PIN5_bm;
+    PORTC.OUTSET = PIN6_bm | PIN7_bm;
 }
 
 // Initialize TCB3 PWM mode and output pin (to motor) for PWM signals
@@ -321,8 +322,8 @@ int main(void)
             // Counting first digit from rpm
             while(rpm >=10)
             {
-            // Dividing with 10 until only one number is left -> msd
-            rpm = rpm / 10;
+                // Dividing with 10 until only one number is left -> msd
+                rpm = rpm / 10;
             }
             msd = rpm;
             // Updating display to msd
