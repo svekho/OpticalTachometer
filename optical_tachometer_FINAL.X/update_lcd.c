@@ -4,11 +4,11 @@
 #include <util/delay.h>
 #include <string.h>
 
-void update_lcd(int rpm)
+void update_lcd(uint16_t rpm)
 
 {
     // Placeholder for calculated rpm
-    int rpmOriginal = rpm;
+    uint16_t rpmOriginal = rpm;
     // This will be the number of elements in an array
     int num = 0; 
     // Counting how many chars will be in array, dividing with 10 to move

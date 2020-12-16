@@ -169,8 +169,10 @@ void ADC_init(void)
 void LCD_init(void)
 {
     // Configuring pins LCD uses as outputs
-    PORTB.DIRSET = PIN3_bm | PIN4_bm | PIN5_bm;
-    PORTD.DIRSET = PIN0_bm|PIN1_bm|PIN2_bm|PIN3_bm|PIN4_bm|PIN5_bm|PIN6_bm;
+    VPORTB.DIR |= PIN3_bm| PIN4_bm | PIN5_bm;
+    //VPORTB.DIR |= PIN4_bm;
+    //VPORTB.DIR |= PIN5_bm;
+    VPORTD.DIR |= PIN0_bm|PIN1_bm|PIN2_bm|PIN3_bm|PIN4_bm|PIN5_bm|PIN6_bm;
     VPORTD.DIR |= PIN7_bm;
     
     // Enable backlight
