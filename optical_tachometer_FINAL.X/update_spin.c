@@ -11,7 +11,7 @@ void update_spin(uint8_t userVoltage)
     
     // Disable the peripheral
     TCB0.CTRLA &= ~TCB_ENABLE_bm;
-    TCB0.CTRLB &= ~TCB_CCMPEN_bm;
+    //TCB0.CTRLB &= ~TCB_CCMPEN_bm;
     
     // Writing Capture/Compare register with new duty cycle based on
     // potentiometer
@@ -22,5 +22,5 @@ void update_spin(uint8_t userVoltage)
     
     // Re-enable the module
     TCB0.CTRLA |= TCB_ENABLE_bm;
-    TCB0.CTRLB |= TCB_CCMPEN_bm;
+    //TCB0.CTRLB |= TCB_CCMPEN_bm;
 }

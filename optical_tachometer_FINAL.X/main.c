@@ -189,7 +189,7 @@ void TCB_init(void)
     // (CCMPL = 0xFF)
     TCB0.CCMP = 0x80FF;
     // Enable TCB, and divide clock with 2
-    TCB0.CTRLA |= TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc;
+    TCB0.CTRLA = TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc;
     // Enable output signal of Compare/Capture, and TCB configured in 
     // 8-bit PWM mode
     TCB0.CTRLB |= TCB_CCMPEN_bm | TCB_CNTMODE_PWM8_gc;
@@ -320,11 +320,10 @@ int main(void)
             // rpm calculated from rotations 
             //(60 because observation interval is 1,0s)
             rpm = rotations*60;
-            printf("%i rpm\r\n", adcValue);
+            printf("%i rpm\r\n", rpm);
             // Updating display to RPM
             update_lcd(rpm);
-            // Resetting rpm and rotations for next round
-            rpm = 0;
+            // Resetting rotations for next round
             rotations=0;
             // Enable interrupts again
             sei();
