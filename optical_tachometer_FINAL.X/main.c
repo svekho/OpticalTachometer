@@ -1,9 +1,37 @@
 /*
- * File:   main.c
- * Author: Sandra Ekholm, Amy Nymalm and Nea Kontturi
+ * File:   main.c - Optical Tachometer / DTE0068 (2020) Course Project
+ * Authors: Sandra Ekholm <svekho@utu.fi> 
+ *          Amy Nymalm <aanyma@utu.fi> 
+ *          Nea Kontturi <nckont@utu.fi>
+ * 
+ * DESCRIPTION
+ *      This is the implementation of project Optical Tachometer. The code is 
+ *      divided into three source files. Two other files include updates of 
+ *      two components that are used. With ADC the microcontroller reads LDR
+ *      values that will change when the DC motor is spinning between LDR and 
+ *      LED. Based on values LDR gives, the RPM is calculated and sent to 
+ *      connected LCD display, which updates ones a minute. The spinning of DC 
+ *      motor can be changed with potentiometer that is also connected to ADC.
+ *      The implementation is not yet working properly with AVR microcontroller 
+ *      and component kit received for the project work.
+ *      
  *
  * Created on 02 December 2020, 13:32
+ * 2020-12-02 RTC initialized succesfully.
+ * 2020-12-04 Connection to Putty created.
+ * 2020-12-07 ADC initialized succesfully.
+ * 2020-12-08 RPM calculation added and interrupts for RTC and ADC created.
+ *            Calibration of LDR light added.
+ * 2020-12-11 LCD display initialized and configurated to work successfully.
+ * 2020-12-14 DC motor connected.
+ * 2020-12-15 TCB initialized and configurated. Spinning updating for motor
+ *            created.
+ * 2020-12-16 Delays added for ADC channel changing.
+ * 2020-12-17 Final implementation of project.
+ * 2020-12-18 Final corrected version of project.
+ * 
  */
+
 #define F_CPU 3333333
 #define USART0_BAUD_RATE(BAUD_RATE) \
     ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
@@ -67,7 +95,7 @@ static int USART0_printChar(char c, FILE *stream)
 static FILE USART_stream =  \
     FDEV_SETUP_STREAM(USART0_printChar, NULL, _FDEV_SETUP_WRITE);
 
-// Intitialising connection to  computer terminal/putty
+// Intitialising connection to computer terminal/putty
 static void USART0_init(void)
 {
     PORTA.DIR |= PIN0_bm;
@@ -169,7 +197,7 @@ void ADC_init(void)
 void LCD_init(void)
 {
     // Configuring pins LCD uses as outputs, dont need to be atomic (no 
-    // interrupts) but operations fast
+    // interrupts) but operations shall be fast
     PORTB.DIRSET = PIN3_bm | PIN4_bm | PIN5_bm;
     VPORTD.DIR |= PIN0_bm|PIN1_bm|PIN2_bm|PIN3_bm|PIN4_bm|PIN5_bm|PIN6_bm;
     VPORTD.DIR |= PIN7_bm;
@@ -178,7 +206,7 @@ void LCD_init(void)
     VPORTB.OUT |= PIN5_bm;
 }
 
-// Initialize TCB3 PWM mode and output pin (to motor) for PWM signals
+// Initialize TCB0 PWM mode and output pin (to motor) for PWM signals
 void TCB_init(void)
 {
     // Configure correct pin as output to DC motor, and first as low
@@ -188,13 +216,14 @@ void TCB_init(void)
     // Duty cycle 50 % first (CCMPH = 0x80), PWM signal period 1 sec 
     // (CCMPL = 0xFF)
     TCB0.CCMP = 0x80FF;
+    // Also runs in sleep mode
+    TCB0.CTRLA |= TCB_RUNSTDBY_bm;
     // Enable TCB, and divide clock with 2
     TCB0.CTRLA = TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc;
     // Enable output signal of Compare/Capture, and TCB configured in 
     // 8-bit PWM mode
     TCB0.CTRLB |= TCB_CCMPEN_bm | TCB_CNTMODE_PWM8_gc;
-    // Also runs in sleep mode
-    TCB0.CTRLA |= TCB_RUNSTDBY_bm;
+    
 }
 
 // Calibrates the threshold for light vs dark, depending on current lighting.
@@ -205,7 +234,7 @@ void calibrate_threshold(void)
     
     printf("Calibrating lighting, one moment...\r\n");
     
-    // Measuring current light conditions in ldr environment 100 times
+    // Measuring current light conditions in ldr environment 1000 times
     for (int i = 0; i<=9999; i++)
     {
         // Waiting adc result to be ready
@@ -213,7 +242,7 @@ void calibrate_threshold(void)
         {
             ;
         }
-        // Setting every 33th measured value to the array
+        // Setting every 333th measured value to the array
         if ((i % 3333) == 0)
         {
             calibTab[i/3333 - 1] = ADC0.RES;
