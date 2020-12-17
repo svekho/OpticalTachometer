@@ -49,7 +49,7 @@ void update_lcd(int rpm)
     // String to be printed after rpm value
     char rpmString[4] = "RPM";
     
-    // Mahollist laittaa PORTD sun muut VPORTD??
+    // Using VPORTs to make operations faster
     
     // Clear display
     VPORTD.OUT = 0x01;
