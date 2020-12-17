@@ -1,5 +1,5 @@
 /*
- * File:   main.c
+ * File:   main.c - Optical Tachometer / DTE0068 (2020) Course Project
  * Author: Sandra Ekholm, Amy Nymalm and Nea Kontturi
  *
  * Created on 02 December 2020, 13:32
@@ -67,7 +67,7 @@ static int USART0_printChar(char c, FILE *stream)
 static FILE USART_stream =  \
     FDEV_SETUP_STREAM(USART0_printChar, NULL, _FDEV_SETUP_WRITE);
 
-// Intitialising connection to  computer terminal/putty
+// Intitialising connection to computer terminal/putty
 static void USART0_init(void)
 {
     PORTA.DIR |= PIN0_bm;
@@ -188,13 +188,16 @@ void TCB_init(void)
     // Duty cycle 50 % first (CCMPH = 0x80), PWM signal period 1 sec 
     // (CCMPL = 0xFF)
     TCB0.CCMP = 0x80FF;
+    // Also runs in sleep mode
+    TCB0.CTRLA |= TCB_RUNSTDBY_bm;
+    // Enable interrupts
+    TCB0.INTCTRL |= TCB_CAPT_bm;
     // Enable TCB, and divide clock with 2
     TCB0.CTRLA = TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc;
     // Enable output signal of Compare/Capture, and TCB configured in 
     // 8-bit PWM mode
     TCB0.CTRLB |= TCB_CCMPEN_bm | TCB_CNTMODE_PWM8_gc;
-    // Also runs in sleep mode
-    TCB0.CTRLA |= TCB_RUNSTDBY_bm;
+    
 }
 
 // Calibrates the threshold for light vs dark, depending on current lighting.
@@ -270,6 +273,15 @@ ISR(ADC0_RESRDY_vect)
         // No LCD updating, LDR updating
         lcdUpdate = 2;
     }
+}
+// TCB interrupt
+ISR(TCB0_INT_vect)
+{
+    // Clear interrupt flags
+    TCB0.INTFLAGS |= TCB_CAPT_bm;
+    // Reset counter
+    TCB0.CNT = 0x0000;
+    lcdUpdate = 0;
 }
 
 
@@ -381,6 +393,10 @@ int main(void)
             _delay_us(10);
             potentRead = 0;
             sei();
+        }
+        else
+        {
+            ;
         }
     }
     return 0;
