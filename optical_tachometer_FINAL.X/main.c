@@ -381,6 +381,7 @@ int main(void)
                 _delay_us(10);
                 // Setting new reference voltage (VDD)
                 ADC0.CTRLC |= ADC_REFSEL_VDDREF_gc;
+                // Settling time for ADC to switch reference voltage
                 _delay_us(10);
                 potentRead++;
                 sei();
@@ -399,14 +400,13 @@ int main(void)
             userVoltage = adcValue>>2;
             // Updates motor speed
             update_spin(userVoltage);
-            //printf("%i adcUservoltageeeeeeeeeen\r\n", adcValue);
-            //printf("%i \r\n", adcValue);
             // Switching ADC channel back to LDR
             ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
             // Settling time for ADC to switch the channel
             _delay_us(10);
             // Setting reference voltage back 1.5 V for LDR
             ADC0.CTRLC |= ADC_REFSEL_INTREF_gc;
+            // Settling time for ADC to switch reference voltage
             _delay_us(10);
             potentRead = 0;
             sei();

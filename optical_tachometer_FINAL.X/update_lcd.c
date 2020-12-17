@@ -56,6 +56,7 @@ void update_lcd(int rpm)
     VPORTB.OUT &= ~PIN4_bm;
     VPORTB.OUT |= PIN3_bm;
     VPORTB.OUT &= ~PIN3_bm;
+    // Settling time for LCD display to operate on command
     _delay_ms(1);
     
     // Set cursor back at home position
@@ -63,6 +64,7 @@ void update_lcd(int rpm)
     VPORTB.OUT &= ~PIN4_bm;
     VPORTB.OUT |= PIN3_bm;
     VPORTB.OUT &= ~PIN3_bm;
+    // Settling time for LCD display to operate on command
     _delay_ms(1);
     
     // Looping through rpmValue to print each number of rpm
@@ -72,6 +74,7 @@ void update_lcd(int rpm)
         VPORTB.OUT |= PIN4_bm;
         VPORTB.OUT |= PIN3_bm;
         VPORTB.OUT &= ~PIN3_bm;
+        // Settling time for LCD to operate on displaying the data received
         _delay_ms(1);
     }
     
@@ -80,6 +83,7 @@ void update_lcd(int rpm)
     VPORTB.OUT |= PIN4_bm;
     VPORTB.OUT |= PIN3_bm;
     VPORTB.OUT &= ~PIN3_bm;
+    // Settling time for LCD to operate on displaying the data received
     _delay_ms(1);
     
     // Looping through the characters of rpmString and printing them to LCD
@@ -89,6 +93,7 @@ void update_lcd(int rpm)
         VPORTB.OUT |= PIN4_bm;
         VPORTB.OUT |= PIN3_bm;
         VPORTB.OUT &= ~PIN3_bm;
+        // Settling time for LCD to operate on displaying the data received
         _delay_ms(1);
     }
     
