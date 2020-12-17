@@ -10,7 +10,7 @@
  *      two components that are used. With ADC the microcontroller reads LDR
  *      values that will change when the DC motor is spinning between LDR and 
  *      LED. Based on values LDR gives, the RPM is calculated and sent to 
- *      connected LCD display, which updates ones a minute. The spinning of DC 
+ *      connected LCD display, which updates once a minute. The spinning of DC 
  *      motor can be changed with potentiometer that is also connected to ADC.
  *      The implementation is not yet working properly with AVR microcontroller 
  *      and component kit received for the project work.
