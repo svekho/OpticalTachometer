@@ -24,7 +24,7 @@ void update_spin(uint8_t userVoltage)
     TCB0.CCMPH = userVoltage;
     
     // Reset count register
-    TCB0.CNT = 0x0000;
+    //TCB0.CNT = 0x0000;
     
     // Re-enable the module
     TCB0.CTRLA |= TCB_ENABLE_bm;
