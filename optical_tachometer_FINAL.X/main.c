@@ -197,7 +197,7 @@ void ADC_init(void)
 void LCD_init(void)
 {
     // Configuring pins LCD uses as outputs, dont need to be atomic (no 
-    // interrupts) but operations fast
+    // interrupts) but operations shall be fast
     PORTB.DIRSET = PIN3_bm | PIN4_bm | PIN5_bm;
     VPORTD.DIR |= PIN0_bm|PIN1_bm|PIN2_bm|PIN3_bm|PIN4_bm|PIN5_bm|PIN6_bm;
     VPORTD.DIR |= PIN7_bm;
@@ -234,7 +234,7 @@ void calibrate_threshold(void)
     
     printf("Calibrating lighting, one moment...\r\n");
     
-    // Measuring current light conditions in ldr environment 100 times
+    // Measuring current light conditions in ldr environment 1000 times
     for (int i = 0; i<=9999; i++)
     {
         // Waiting adc result to be ready
@@ -242,7 +242,7 @@ void calibrate_threshold(void)
         {
             ;
         }
-        // Setting every 33th measured value to the array
+        // Setting every 333th measured value to the array
         if ((i % 3333) == 0)
         {
             calibTab[i/3333 - 1] = ADC0.RES;
