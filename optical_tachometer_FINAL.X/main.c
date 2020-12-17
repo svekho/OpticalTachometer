@@ -168,10 +168,9 @@ void ADC_init(void)
 // Initialize LCD
 void LCD_init(void)
 {
-    // Configuring pins LCD uses as outputs
-    VPORTB.DIR |= PIN3_bm| PIN4_bm | PIN5_bm;
-    //VPORTB.DIR |= PIN4_bm;
-    //VPORTB.DIR |= PIN5_bm;
+    // Configuring pins LCD uses as outputs, dont need to be atomic (no 
+    // interrupts) but operations fast
+    PORTB.DIRSET = PIN3_bm | PIN4_bm | PIN5_bm;
     VPORTD.DIR |= PIN0_bm|PIN1_bm|PIN2_bm|PIN3_bm|PIN4_bm|PIN5_bm|PIN6_bm;
     VPORTD.DIR |= PIN7_bm;
     
@@ -248,7 +247,7 @@ ISR(ADC0_RESRDY_vect)
     // Setting the value adc measured
     adcValue = ADC0.RES;
     
-    if (potentRead == 10)
+    if (potentRead == 100)
     {
         // Updating the propellor
         lcdUpdate = 3;
@@ -268,7 +267,7 @@ ISR(ADC0_RESRDY_vect)
         {
             isPropOn = 0;
         }
-        // No segment updating, LDR updating
+        // No LCD updating, LDR updating
         lcdUpdate = 2;
     }
 }
@@ -345,7 +344,7 @@ int main(void)
                 sei();
             }
             // Checking if next conversion shall be taken from potentiometer
-            if (potentRead == 9)
+            if (potentRead == 99)
             {
                 cli();
                 // Switching ADC channel to potentiometer
