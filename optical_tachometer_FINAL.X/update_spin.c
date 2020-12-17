@@ -1,9 +1,16 @@
-#include <avr/io.h>
 /**
- * This function updates the TCB PWM duty cycle based on the parameter received
- * from main.c. 
- * @param userVoltage
+ * File: update_spin.c
+ * 
+ * DESCRIPTION
+ *      This is a single source file for updating the spinning speed of DC 
+ *      motor. It receives a parameter userVoltage which is the value received 
+ *      from potentiometer. The TCB will be disabled for the process of changing
+ *      the motor speed. Motor speed is updated by changing the duty cycle of
+ *      PWM that is controlled by TCB.
  */
+
+#include <avr/io.h>
+
 void update_spin(uint8_t userVoltage)
 {
     // Variable to store hexadecimal value of given userVoltage
@@ -11,7 +18,6 @@ void update_spin(uint8_t userVoltage)
     
     // Disable the peripheral
     TCB0.CTRLA &= ~TCB_ENABLE_bm;
-    //TCB0.CTRLB &= ~TCB_CCMPEN_bm;
     
     // Writing Capture/Compare register with new duty cycle based on
     // potentiometer
@@ -22,5 +28,4 @@ void update_spin(uint8_t userVoltage)
     
     // Re-enable the module
     TCB0.CTRLA |= TCB_ENABLE_bm;
-    //TCB0.CTRLB |= TCB_CCMPEN_bm;
 }
