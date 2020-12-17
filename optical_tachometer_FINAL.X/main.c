@@ -216,10 +216,8 @@ void TCB_init(void)
     // Duty cycle 50 % first (CCMPH = 0x80), PWM signal period 1 sec 
     // (CCMPL = 0xFF)
     TCB0.CCMP = 0x80FF;
-    // Also runs in stdby sleep mode
-    TCB0.CTRLA |= TCB_RUNSTDBY_bm;
-    // Enable TCB, and divide clock with 2
-    TCB0.CTRLA = TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc;
+    // Enable TCB, and divide clock with 2, also runs in stdby sleep mode
+    TCB0.CTRLA = TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc | TCB_RUNSTDBY_bm;
     // Enable output signal of Compare/Capture, and TCB configured in 
     // 8-bit PWM mode
     TCB0.CTRLB |= TCB_CCMPEN_bm | TCB_CNTMODE_PWM8_gc;
@@ -246,6 +244,7 @@ void calibrate_threshold(void)
         if ((i % 3333) == 0)
         {
             calibTab[i/3333 - 1] = ADC0.RES;
+            // Prints selected value to Putty
             printf("%d\r\n", calibTab[i/3333 - 1]);
         }
         // Allowing next adc conversion begin
