@@ -1,9 +1,37 @@
 /*
- * File:   main.c
- * Author: Sandra Ekholm, Amy Nymalm and Nea Kontturi
+ * File:   main.c - Optical Tachometer / DTE0068 (2020) Course Project
+ * Authors: Sandra Ekholm <svekho@utu.fi> 
+ *          Amy Nymalm <aanyma@utu.fi> 
+ *          Nea Kontturi <nckont@utu.fi>
+ * 
+ * DESCRIPTION
+ *      This is the implementation of project Optical Tachometer. The code is 
+ *      divided into three source files. Two other files include updates of 
+ *      two components that are used. With ADC the microcontroller reads LDR
+ *      values that will change when the DC motor is spinning between LDR and 
+ *      LED. Based on values LDR gives, the RPM is calculated and sent to 
+ *      connected LCD display, which updates ones a minute. The spinning of DC 
+ *      motor can be changed with potentiometer that is also connected to ADC.
+ *      The implementation is not yet working properly with AVR microcontroller 
+ *      and component kit received for the project work.
+ *      
  *
  * Created on 02 December 2020, 13:32
+ * 2020-12-02 RTC initialized succesfully.
+ * 2020-12-04 Connection to Putty created.
+ * 2020-12-07 ADC initialized succesfully.
+ * 2020-12-08 RPM calculation added and interrupts for RTC and ADC created.
+ *            Calibration of LDR light added.
+ * 2020-12-11 LCD display initialized and configurated to work successfully.
+ * 2020-12-14 DC motor connected.
+ * 2020-12-15 TCB initialized and configurated. Spinning updating for motor
+ *            created.
+ * 2020-12-16 Delays added for ADC channel changing.
+ * 2020-12-17 Final implementation of project.
+ * 2020-12-18 Final corrected version of project.
+ * 
  */
+
 #define F_CPU 3333333
 #define USART0_BAUD_RATE(BAUD_RATE) \
     ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
