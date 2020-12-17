@@ -51,43 +51,43 @@ void update_lcd(int rpm)
     
     
     // Clear display
-    PORTD.OUT = 0x01;
-    PORTB.OUT &= ~PIN4_bm;
-    PORTB.OUT |= PIN3_bm;
-    PORTB.OUT &= ~PIN3_bm;
+    VPORTD.OUT = 0x01;
+    VPORTB.OUT &= ~PIN4_bm;
+    VPORTB.OUT |= PIN3_bm;
+    VPORTB.OUT &= ~PIN3_bm;
     _delay_ms(1);
     
     // Set cursor back at home position
-    PORTD.OUT = 0x80;
-    PORTB.OUT &= ~PIN4_bm;
-    PORTB.OUT |= PIN3_bm;
-    PORTB.OUT &= ~PIN3_bm;
+    VPORTD.OUT = 0x80;
+    VPORTB.OUT &= ~PIN4_bm;
+    VPORTB.OUT |= PIN3_bm;
+    VPORTB.OUT &= ~PIN3_bm;
     _delay_ms(1);
     
     // Looping through rpmValue to print each number of rpm
     for (int k = 0; k<num ;k++)
     {
-        PORTD.OUT = rpmValue[k];
-        PORTB.OUT |= PIN4_bm;
-        PORTB.OUT |= PIN3_bm;
-        PORTB.OUT &= ~PIN3_bm;
+        VPORTD.OUT = rpmValue[k];
+        VPORTB.OUT |= PIN4_bm;
+        VPORTB.OUT |= PIN3_bm;
+        VPORTB.OUT &= ~PIN3_bm;
         _delay_ms(1);
     }
     
     // Setting 'space' between numbers and "RPM"
-    PORTD.OUT = 0x20;
-    PORTB.OUT |= PIN4_bm;
-    PORTB.OUT |= PIN3_bm;
-    PORTB.OUT &= ~PIN3_bm;
+    VPORTD.OUT = 0x20;
+    VPORTB.OUT |= PIN4_bm;
+    VPORTB.OUT |= PIN3_bm;
+    VPORTB.OUT &= ~PIN3_bm;
     _delay_ms(1);
     
     // Looping through the characters of rpmString and printing them to LCD
     for (int j=0; j<3; j++)
     {
-        PORTD.OUT = rpmString[j];
-        PORTB.OUT |= PIN4_bm;
-        PORTB.OUT |= PIN3_bm;
-        PORTB.OUT &= ~PIN3_bm;
+        VPORTD.OUT = rpmString[j];
+        VPORTB.OUT |= PIN4_bm;
+        VPORTB.OUT |= PIN3_bm;
+        VPORTB.OUT &= ~PIN3_bm;
         _delay_ms(1);
     }
     
