@@ -152,6 +152,8 @@ void RTC_init(void)
     RTC.CLKSEL = RTC_CLKSEL_TOSC32K_gc;
     // Allow RTC running in debug mode
     RTC.DBGCTRL = RTC_DBGRUN_bm;
+    // RTC runs on STDBY sleep mode
+    RTC.CTRLA |=  RTC_RUNSTDBY_bm;
     // Enable periodic interrupt
     RTC.PITINTCTRL = RTC_PI_bm;
     // Selecting number of RTC clock cycles (32768) because we want interrupt
@@ -178,8 +180,8 @@ void ADC_init(void)
     // Resolution 10 bits
     ADC0.CTRLA |= ADC_RESSEL_10BIT_gc;
     
-    // Enable ADC
-    ADC0.CTRLA |= ADC_ENABLE_bm;
+    // Enable ADC and to run in stdby sleep mode
+    ADC0.CTRLA |= ADC_ENABLE_bm | ADC_RUNSTBY_bm;
     
     // Selecting AN8 (PE0) to be connected to ADC (LDR will be connected first)
     ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
@@ -214,7 +216,7 @@ void TCB_init(void)
     // Duty cycle 50 % first (CCMPH = 0x80), PWM signal period 1 sec 
     // (CCMPL = 0xFF)
     TCB0.CCMP = 0x80FF;
-    // Also runs in sleep mode
+    // Also runs in stdby sleep mode
     TCB0.CTRLA |= TCB_RUNSTDBY_bm;
     // Enable TCB, and divide clock with 2
     TCB0.CTRLA = TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc;
