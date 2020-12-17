@@ -38,7 +38,6 @@
 #define MIN_VOLT_DIFF (30)
 #define LWR_THRESH (5)
 
-#include <xc.h>
 #include "update_lcd.h"
 #include "update_spin.h"
 #include <avr/io.h>
@@ -190,7 +189,6 @@ void ADC_init(void)
     
     // Enable interrupts
     ADC0.INTCTRL |= ADC_RESRDY_bm;
-    
 }
 
 // Initialize LCD
@@ -357,7 +355,7 @@ int main(void)
             // Enable interrupts again
             sei();
         }
-        // Checking whether interrupt was from result-ready adc (LDR))
+        // Checking whether interrupt was from result-ready ADC (LDR)
         else if (lcdUpdate == 2)
         {
             //when the propeller is not in front of the LDR, the
@@ -387,9 +385,9 @@ int main(void)
             }
             else
             {
-            cli();
-            potentRead++;
-            sei();
+                cli();
+                potentRead++;
+                sei();
             }
         }
         else if (lcdUpdate == 3)
