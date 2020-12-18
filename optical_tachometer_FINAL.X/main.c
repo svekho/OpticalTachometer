@@ -12,8 +12,6 @@
  *      LED. Based on values LDR gives, the RPM is calculated and sent to 
  *      connected LCD display, which updates once a minute. The spinning of DC 
  *      motor can be changed with potentiometer that is also connected to ADC.
- *      The implementation is not yet working properly with AVR ATMEGA4809 
- *      microcontroller and component kit received for the project work.
  *      
  *
  * Created on 02 December 2020, 13:32
@@ -247,7 +245,7 @@ void ldr_threshold_calibrate(void)
         {
             // Capturing current ADC value
             calibTab[i/3333 - 1] = ADC0.RES;
-            // Prints selected value to Putty
+            // Prints measured value to Putty
             printf("%d\r\n", calibTab[i/3333 - 1]);
         }
         // Allowing next ADC conversion begin
@@ -260,7 +258,7 @@ void ldr_threshold_calibrate(void)
     // Informing user when calibration is complete and what is the boundary 
     // value
     printf("Calibration complete!\r\n");
-    printf("Threshold voltage: %i\r\n\n", voltThreshold);
+    printf("Threshold voltage: %i\r\n", voltThreshold);
 }
 
 // RTC interrupt
@@ -317,18 +315,21 @@ ISR(ADC0_RESRDY_vect)
 
 int main(void) 
 {
-    // In the beginning the value of parameters is 0
-    adcValue = 0;
-    rotations = 0;
     // Variable to store the rpm calculated from rotations
     uint16_t rpm = 0;
+    
+    // In the beginning the value of global variables is set to 0
+    adcValue = 0;
+    rotations = 0;
     isPropOn = 0;
     lcdUpdate = 0;
     userVoltage = 0;
     potentRead = 0;
+    
     // Setting internal reference voltage to 1.5V
     VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
-    // Initialize output to putty
+    
+    // Initialize output to Putty
     usart0_init();
     // Initialize LCD display
     lcd_init();
@@ -336,15 +337,16 @@ int main(void)
     adc_init();
     // Initialize RTC
     rtc_init();
-    // Initialize TCB to 8-bit PWM mode(and its output pin)
+    // Initialize TCB to 8-bit PWM mode (and its output pin)
     tcb_init();
    
     // Setting IDLE as sleep mode
     set_sleep_mode(SLPCTRL_SMODE_IDLE_gc);
+    
     // Start ADC conversion
     ADC0.COMMAND = ADC_STCONV_bm;
     
-    // Calibrates current lighting without anything in front of the LDR
+    // Calibrates current lightning without anything in front of the LDR
     ldr_threshold_calibrate();
     
     // Enable global interrupts
@@ -352,41 +354,51 @@ int main(void)
     
     while(1)
     {
-        // Entering sleep mode every time after wake up
+        // Entering sleep mode every time after wake up (interrupt)
         sleep_mode();
+        
         // Checking whether the interrupt was about LCD updating
         if (lcdUpdate == 1)
         {
-            // Disable interrupts for segment updating
+            // Disable interrupts for segment updating, rpm must be calculated
+            // and set to LCD without interrupts because it might lead to data
+            // corruption or unstable state
             cli();
-            // rpm calculated from rotations 
-            //(60 because observation interval is 1,0s)
+            // Rpm calculation from rotations 
+            // (*60 because observation interval is 1,0s)
             rpm = rotations*60;
-            printf("%i rpm\r\n", rpm);
-            // Updating display to RPM
+            // Updating display to calculated RPM
             lcd_update(rpm);
             // Resetting rotations for next round
             rotations=0;
-            // Enable interrupts again
+            // Enable interrupts after LCD has been updated correctly
             sei();
         }
-        // Checking whether interrupt was from result-ready ADC (LDR)
+        
+        // Checking whether the interrupt was from result-ready ADC (LDR)
         else if (lcdUpdate == 2)
         {
-            //when the propeller is not in front of the LDR, the
-            // rotations value is updated.
+            // When the propeller is in front of the LDR, the rotations
+            // value is updated
             if (isPropOn == 1)
             {
-                // Disable global interrupts to update propeller
+                // Disable global interrupts to update rotations without data
+                // corruption, making process atomic
                 cli();
+                // Rotations value added with one
                 rotations++;
+                // isPropOn written to two to ensure LDR does not count same 
+                // rotation twice
                 isPropOn = 2;
                 // Enable global interrupts
                 sei();
             }
-            // Checking if next conversion shall be taken from potentiometer
+            // Checking if next conversion shall be taken from potentiometer,
+            // next LDR conversion is 100th time
             if (potentRead == 99)
             {
+                // Disable global interrupts to ensure proper ADC configuration
+                // without corruption
                 cli();
                 // Switching ADC channel to potentiometer
                 ADC0.MUXPOS = ADC_MUXPOS_AIN14_gc;
@@ -396,18 +408,29 @@ int main(void)
                 ADC0.CTRLC |= ADC_REFSEL_VDDREF_gc;
                 // Settling time for ADC to switch reference voltage
                 _delay_us(10);
+                // Increasing potentRead to 100
                 potentRead++;
+                // Enable global interrupts
                 sei();
             }
+            
+            // Neither rotations nor ADC channel shall be updated
             else
             {
+                // Disable interrupts to ensure atomic operation for RMW
                 cli();
+                // Increase potentRead value
                 potentRead++;
+                // Enable global interrupts
                 sei();
             }
         }
+        
+        // Checking whether interrupt was from result-ready ADC (potentiometer) 
         else if (lcdUpdate == 3)
         {
+            // Disable interrupts to ensure proper spinning update and ADC 
+            // configuration without corruptions
             cli();
             // Potentiometer value changed from 10 bits to 8
             userVoltage = adcValue>>2;
@@ -417,11 +440,13 @@ int main(void)
             ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
             // Settling time for ADC to switch the channel
             _delay_us(10);
-            // Setting reference voltage back 1.5 V for LDR
+            // Setting reference voltage back to 1.5 V for LDR
             ADC0.CTRLC |= ADC_REFSEL_INTREF_gc;
             // Settling time for ADC to switch reference voltage
             _delay_us(10);
+            // Reset potentRead counter
             potentRead = 0;
+            // Enable global interrupts
             sei();
         }
     }
