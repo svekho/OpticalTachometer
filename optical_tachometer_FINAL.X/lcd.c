@@ -2,11 +2,13 @@
  * File: lcd.c 
  * 
  * DESCRIPTION
- *      This is a single source file for implementation of LCD update process.
- *      It receives a parameter rpm which is calculated in main.c. The parameter 
- *      is stored into an array from which the numbers are sent to LCD display 
- *      one by one. After whole value has been sent, also string "RPM" will be
- *      sent similarly.
+ *      This is a single source file for implementation of LCD update process
+ *      and LCD initialize process. Lcd_init() initializes output pins to
+ *      display, another function lcd_update updates display when requested in
+ *      main.c. It receives a parameter rpm which is calculated in main.c. The 
+ *      parameter is stored into an array from which the numbers are sent to LCD 
+ *      display one by one. After whole value has been sent, also string "RPM"
+ *      will be sent similarly.
  */
 
 #define F_CPU 3333333
