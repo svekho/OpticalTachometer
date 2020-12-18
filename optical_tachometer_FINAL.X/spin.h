@@ -1,6 +1,9 @@
 /* 
  * File:   spin.h
  * Author: Sandra Ekholm
+ * 
+ * DESCRIPTION
+ *      Header file for spin module.
  *
  * Created on 16 December 2020, 17:36
  */

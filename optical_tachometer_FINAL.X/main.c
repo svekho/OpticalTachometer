@@ -7,13 +7,13 @@
  * DESCRIPTION
  *      This is the implementation of project Optical Tachometer. The code is 
  *      divided into three source files. Two other files include updates of 
- *      two components that are used. With ADC the microcontroller reads LDR
+ *      two components that are used. With ADC the microcontroller reads LDR's
  *      values that will change when the DC motor is spinning between LDR and 
  *      LED. Based on values LDR gives, the RPM is calculated and sent to 
  *      connected LCD display, which updates once a minute. The spinning of DC 
  *      motor can be changed with potentiometer that is also connected to ADC.
- *      The implementation is not yet working properly with AVR microcontroller 
- *      and component kit received for the project work.
+ *      The implementation is not yet working properly with AVR ATMEGA4809 
+ *      microcontroller and component kit received for the project work.
  *      
  *
  * Created on 02 December 2020, 13:32
@@ -35,7 +35,15 @@
 #define F_CPU 3333333
 #define USART0_BAUD_RATE(BAUD_RATE) \
     ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
+
+// A boundary value which will be added to calculated voltThreshold, the ADC 
+// measurements will be more stable and reliable when deciding whether propellor
+// is in front of LDR or not. Through testing value 30 has been estimated as
+// suitable value
 #define MIN_VOLT_DIFF (30)
+
+// Value that will be subtracted from voltThreshold to make sure LDR measurement
+// doesn't cause unstable conditions when calculating rpm
 #define LWR_THRESH (5)
 
 #include "lcd.h"
@@ -56,22 +64,29 @@ void adc_init(void);
 void ldr_threshold_calibrate(void);
 void tcb_init(void);
 
-// Global variable to store adc result
+// Global variable to store ADC result
 volatile uint16_t adcValue;
+
 // Variable to count rotations
 volatile uint16_t rotations;
-// int to check if the propeller is in front of the LDR, and makes sure, the 
-// propeller is only counted once
+
+// Unsigned integer to indicate if the propeller is in front of the LDR, and  
+// this makes sure, the propeller is only counted once
 volatile uint8_t isPropOn;
-// Checking whether should update LCD or calculate rotations from adc
+
+// Checking whether should update LCD (=1), calculate rotations (=2) from ADC or  
+// measure potentiometer (=3) from ADC
 volatile uint8_t lcdUpdate;
-// Value for storing the voltage level used as indicator whether there is a 
-// propellor in front of the LDR or not.
+
+// Value for storing the voltage level used as boundary indicating whether there
+// is a propellor in front of the LDR or not
 uint16_t voltThreshold;
-// Indicates potentiometer value user wants to give for spinning speed
+
+// Indicates potentiometer value user has set for spinning speed
 uint8_t userVoltage;
+
 // Indicates whether we are going to measure LDR or potentiometer, every 100th
-// time we need to read potentiometer
+// time we need to read potentiometer, otherwise LDR
 volatile uint8_t potentRead;
 
 // Function for sending text to computer terminal/putty
@@ -93,7 +108,7 @@ static int usart0_print_char(char c, FILE *stream)
 static FILE USART_stream =  \
     FDEV_SETUP_STREAM(usart0_print_char, NULL, _FDEV_SETUP_WRITE);
 
-// Intitialising connection to computer terminal/putty
+// Intitializing connection to computer terminal/putty
 static void usart0_init(void)
 {
     PORTA.DIR |= PIN0_bm;
@@ -172,8 +187,8 @@ void adc_init(void)
     PORTE.PIN0CTRL |= PORT_ISC_INPUT_DISABLE_gc;
     PORTF.PIN4CTRL |= PORT_ISC_INPUT_DISABLE_gc;
     
-    // Voltage reference is 1,5V at first (internal reference voltage already
-    // defined) and prescaler of 16
+    // Voltage reference is 1,5V at first when starting measurements of LDR
+    // (internal reference voltage already defined in main) and prescaler of 16
     ADC0.CTRLC |= ADC_REFSEL_INTREF_gc | ADC_PRESC_DIV16_gc;
     
     // Resolution 10 bits
@@ -192,33 +207,34 @@ void adc_init(void)
     ADC0.INTCTRL |= ADC_RESRDY_bm;
 }
 
-// Initialize TCB0 PWM mode and output pin (to motor) for PWM signals
+// Initialize TCB0 in PWM mode and output pin (to motor) for PWM signals
 void tcb_init(void)
 {
-    // Configure correct pin as output to DC motor, and first as low
+    // Configure correct pin as output to DC motor, and first as high
     VPORTA.DIR |= PIN2_bm;
     VPORTA.OUT |= PIN2_bm;
 
-    // Duty cycle 50 % first (CCMPH = 0x80), PWM signal period 1 sec 
+    // Duty cycle 50 % set at first (CCMPH = 0x80), PWM signal period 1 sec 
     // (CCMPL = 0xFF)
     TCB0.CCMP = 0x80FF;
-    // Enable TCB, and divide clock with 2, also runs in stdby sleep mode
-    TCB0.CTRLA = TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc | TCB_RUNSTDBY_bm;
+    // Enable TCB, and divide clock with 2, also setting run in stdby sleep mode
+    TCB0.CTRLA |= TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc | TCB_RUNSTDBY_bm;
     // Enable output signal of Compare/Capture, and TCB configured in 
     // 8-bit PWM mode
     TCB0.CTRLB |= TCB_CCMPEN_bm | TCB_CNTMODE_PWM8_gc;
     
 }
 
-// Calibrates the threshold for light vs dark, depending on current lighting.
+// Calibrates the threshold for light vs dark, depending on current lighting
 void ldr_threshold_calibrate(void)
 {
-    // temporary values for calibration (array)
+    // Temporary values of calibration will be set into an array
     int calibTab [4] = {0};
     
+    // Informing user via Putty
     printf("Calibrating lighting, one moment...\r\n");
     
-    // Measuring current light conditions in ldr environment 1000 times
+    // Measuring current light conditions in LDR's environment 1000 times
     for (int i = 0; i<=9999; i++)
     {
         // Waiting adc result to be ready
@@ -229,6 +245,7 @@ void ldr_threshold_calibrate(void)
         // Setting every 333th measured value to the array
         if ((i % 3333) == 0)
         {
+            // Capturing current ADC value
             calibTab[i/3333 - 1] = ADC0.RES;
             // Prints selected value to Putty
             printf("%d\r\n", calibTab[i/3333 - 1]);
@@ -237,8 +254,11 @@ void ldr_threshold_calibrate(void)
         ADC0.INTFLAGS = ADC_RESRDY_bm;
     }
 
-    //set voltThreshold a little bit above the average of the calibration values
+    // Set voltThreshold a little bit above the average of the calibration 
+    // values with defined macro
     voltThreshold = (calibTab[0]+calibTab[1]+calibTab[2])/3 + MIN_VOLT_DIFF;
+    // Informing user when calibration is complete and what is the boundary 
+    // value
     printf("Calibration complete!\r\n");
     printf("Threshold voltage: %i\r\n\n", voltThreshold);
 }
@@ -257,34 +277,43 @@ ISR(ADC0_RESRDY_vect)
 {
     // Clearing interrupt flag
     ADC0.INTFLAGS = ADC_RESRDY_bm;
-    // Setting the value adc measured
+    // Setting the value ADC measured
     adcValue = ADC0.RES;
     
+    // Checking whether measured value is from potentiometer, time to update the
+    // propellor spinning speed
     if (potentRead == 100)
     {
-        // Updating the propellor
+        // Setting indicator to point out the need for updating spinning
         lcdUpdate = 3;
     }
+    
+    // Measure was from LDR
     else
     {
-        //AdcValue: propeller is in front of LDR, calibrated in the beginning
+        // Based on adcValue: propeller is in front of LDR, threshold was 
+        // calibrated in the beginning
         if (adcValue>voltThreshold)
         {
-            //makes sure the rotations are only updated once per rotation
+            // Propellor was not in front of LDR last time ADC measured value
             if(isPropOn == 0)
             {
+                // Setting propellor state to be in front of LDR
                 isPropOn=1;
             }
         }
+        // Based on adcValue: propellor is not in front of LDR, LWR_THRESH is 
+        // subtracted from boundary value to make sure light conditions are not 
+        // unstable
         else if (adcValue<(voltThreshold - LWR_THRESH))
         {
+            // Setting propellor state to indicate it is not in front of LDR
             isPropOn = 0;
         }
-        // No LCD updating, LDR updating
+        // Setting indicator to point out the need for LDR updating
         lcdUpdate = 2;
     }
 }
-
 
 int main(void) 
 {

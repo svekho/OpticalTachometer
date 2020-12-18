@@ -20,28 +20,30 @@
 // Initialize LCD
 void lcd_init(void)
 {
-    // Configuring pins LCD uses as outputs, don't need to be atomic (no 
-    // interrupts enabled) but operations shall be fast
+    // Configuring pins LCD uses as outputs, operations don't need to be atomic  
+    // (because no global interrupts are enabled) but operations shall be fast
+    // (using VPORTS)
     PORTB.DIRSET = PIN3_bm | PIN4_bm | PIN5_bm;
     VPORTD.DIR |= PIN0_bm|PIN1_bm|PIN2_bm|PIN3_bm|PIN4_bm|PIN5_bm|PIN6_bm;
     VPORTD.DIR |= PIN7_bm;
     
-    // Enable backlight
+    // Enable LCD backlight
     VPORTB.OUT |= PIN5_bm;
 }
 
 // Update LCD display
 void lcd_update(uint16_t rpm)
 {
-    // Placeholder for calculated rpm
+    // Placeholder for received rpm
     uint16_t rpmOriginal = rpm;
 
-    // This will be the number of elements in an array, initialized as 0 in the
-    // beginning
+    // Variable "num" will be the number of elements in an array, initialized as
+    // 0 in the beginning
     uint8_t num = 0; 
-    // Counting how many chars will be in string, dividing with 10 to move
-    // towards the final digit of rpm (+1 for each round to num because one 
-    // digit has been passed)
+    
+    // Counting how many chars will be in string, dividing rpm with 10 to go
+    // over each digit of rpm (+1 for each round to num because one digit has
+    // been passed)
     do
     {
         rpm = rpm/10;
@@ -49,15 +51,18 @@ void lcd_update(uint16_t rpm)
     }
     while(rpm != 0);
 
-    // String for rpm value to be printed in LCD (+1 for null)
+    // String for rpm value, which will be printed in LCD (string size num and 
+    // +1 for null character)
     char rpmValue[num+1];
     
-    // Setting the rpm value to the array (reversed because we are printing
-    // them to LCD next in ascending order)
+    // Setting the rpm value to the array, looping through each element of
+    // string and setting a digit into it (reversed order because we are 
+    // printing them to LCD next in ascending order)
     for (int i=num-1; i>=0; i--)
     {
         // + '0' to change integer into char
         rpmValue[i] = rpmOriginal%10 + '0';
+        // Dividing with 10 to get access into next digit of rpm
         rpmOriginal = rpmOriginal/10;
     }
 
@@ -67,10 +72,10 @@ void lcd_update(uint16_t rpm)
     // Using VPORTs to make operations faster
     
     // Clear display
-    VPORTD.OUT = 0x01;
-    VPORTB.OUT &= ~PIN4_bm;
-    VPORTB.OUT |= PIN3_bm;
-    VPORTB.OUT &= ~PIN3_bm;
+    VPORTD.OUT = 0x01;  // Instruction that will be sent to LCD
+    VPORTB.OUT &= ~PIN4_bm; // Register select: instruction input for LCD   
+    VPORTB.OUT |= PIN3_bm;  // Enable signal into LCD 
+    VPORTB.OUT &= ~PIN3_bm; // Disable signal to LCD
     // Settling time for LCD display to operate on command
     _delay_ms(1);
     
@@ -82,18 +87,18 @@ void lcd_update(uint16_t rpm)
     // Settling time for LCD display to operate on command
     _delay_ms(1);
     
-    // Looping through rpmValue to print each number of rpm
+    // Looping through rpmValue to send each digit of rpm to LCD
     for (int k = 0; k<num ;k++)
     {
-        VPORTD.OUT = rpmValue[k];
-        VPORTB.OUT |= PIN4_bm;
-        VPORTB.OUT |= PIN3_bm;
-        VPORTB.OUT &= ~PIN3_bm;
+        VPORTD.OUT = rpmValue[k];   // Data that will be sent to LCD
+        VPORTB.OUT |= PIN4_bm;  // Register select: data input for LCD
+        VPORTB.OUT |= PIN3_bm;  // Enable signal into LCD
+        VPORTB.OUT &= ~PIN3_bm; // Disable signal to LCD
         // Settling time for LCD to operate on displaying the data received
         _delay_ms(1);
     }
     
-    // Setting 'space' between numbers and "RPM"
+    // Setting 'space' between rpm digits and string "RPM"
     VPORTD.OUT = 0x20;
     VPORTB.OUT |= PIN4_bm;
     VPORTB.OUT |= PIN3_bm;
@@ -101,7 +106,7 @@ void lcd_update(uint16_t rpm)
     // Settling time for LCD to operate on displaying the data received
     _delay_ms(1);
     
-    // Looping through the characters of rpmString and printing them to LCD
+    // Looping through the characters of rpmString and sending them to LCD
     for (int j=0; j<3; j++)
     {
         VPORTD.OUT = rpmString[j];

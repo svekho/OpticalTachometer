@@ -4,13 +4,14 @@
  * DESCRIPTION
  *      This is a single source file for updating the spinning speed of DC 
  *      motor. It receives a parameter userVoltage which is the value received 
- *      from potentiometer. The TCB will be disabled for the process of changing
- *      the motor speed. Motor speed is updated by changing the duty cycle of
- *      PWM that is controlled by TCB.
+ *      from potentiometer in main.c. The TCB will be disabled for the process
+ *      of changing the motor speed. Motor speed is updated by changing the duty
+ *      cycle of PWM that is controlled by TCB.
  */
 
 #include <avr/io.h>
 
+// Update of DC motor's spinning speed
 void spin_update(uint8_t userVoltage)
 {    
     // Disable the peripheral to update TCB correctly without corrupts
@@ -20,6 +21,6 @@ void spin_update(uint8_t userVoltage)
     // potentiometer
     TCB0.CCMPH = userVoltage;
     
-    // Re-enable the module
+    // Re-enable the module to continue PWM production
     TCB0.CTRLA |= TCB_ENABLE_bm;
 }

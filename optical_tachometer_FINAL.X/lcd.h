@@ -1,6 +1,9 @@
 /* 
  * File:   lcd.h
  * Author: Sandra Ekholm
+ * 
+ * DESCRIPTION
+ *      Header file for lcd module.
  *
  * Created on 16 December 2020, 17:33
  */
