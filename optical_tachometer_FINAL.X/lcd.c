@@ -13,6 +13,15 @@
 
 #define F_CPU 3333333
 
+// Value which is used to divide rpm value, aims to get access on each digit of 
+// rpm value or divide rpm further to get access on next digit
+#define RPM_VALUE_DIV (10)
+
+// Values to operate on LCD display
+#define LCD_CLEAR 0x01
+#define LCD_CURSOR_HOME 0x80
+#define LCD_SET_SPACE 0x20
+
 #include <avr/io.h>
 #include <util/delay.h>
 #include <string.h>
@@ -46,7 +55,7 @@ void lcd_update(uint16_t rpm)
     // been passed)
     do
     {
-        rpm = rpm/10;
+        rpm = rpm/RPM_VALUE_DIV;
         num++;
     }
     while(rpm != 0);
@@ -61,9 +70,9 @@ void lcd_update(uint16_t rpm)
     for (int i=num-1; i>=0; i--)
     {
         // + '0' to change integer into char
-        rpmValue[i] = rpmOriginal%10 + '0';
+        rpmValue[i] = rpmOriginal%RPM_VALUE_DIV + '0';
         // Dividing with 10 to get access into next digit of rpm
-        rpmOriginal = rpmOriginal/10;
+        rpmOriginal = rpmOriginal/RPM_VALUE_DIV;
     }
 
     // String to be printed after rpm value
@@ -72,7 +81,7 @@ void lcd_update(uint16_t rpm)
     // Using VPORTs to make operations faster
     
     // Clear display
-    VPORTD.OUT = 0x01;  // Instruction that will be sent to LCD
+    VPORTD.OUT = LCD_CLEAR;  // Instruction that will be sent to LCD
     VPORTB.OUT &= ~PIN4_bm; // Register select: instruction input for LCD   
     VPORTB.OUT |= PIN3_bm;  // Enable signal into LCD 
     VPORTB.OUT &= ~PIN3_bm; // Disable signal to LCD
@@ -80,7 +89,7 @@ void lcd_update(uint16_t rpm)
     _delay_ms(1);
     
     // Set cursor back at home position
-    VPORTD.OUT = 0x80;
+    VPORTD.OUT = LCD_CURSOR_HOME;
     VPORTB.OUT &= ~PIN4_bm;
     VPORTB.OUT |= PIN3_bm;
     VPORTB.OUT &= ~PIN3_bm;
@@ -99,7 +108,7 @@ void lcd_update(uint16_t rpm)
     }
     
     // Setting 'space' between rpm digits and string "RPM"
-    VPORTD.OUT = 0x20;
+    VPORTD.OUT = LCD_SET_SPACE;
     VPORTB.OUT |= PIN4_bm;
     VPORTB.OUT |= PIN3_bm;
     VPORTB.OUT &= ~PIN3_bm;

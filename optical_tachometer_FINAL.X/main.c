@@ -105,6 +105,7 @@ static void usart0_init(void)
 {
     PORTA.DIR |= PIN0_bm;
     
+    // Value 9600 is provided by Microchip
     USART0.BAUD = (uint16_t)USART0_BAUD_RATE(9600); 
     
     USART0.CTRLB |= USART_TXEN_bm;  
@@ -183,11 +184,8 @@ void adc_init(void)
     // (internal reference voltage already defined in main) and prescaler of 16
     ADC0.CTRLC |= ADC_REFSEL_INTREF_gc | ADC_PRESC_DIV16_gc;
     
-    // Resolution 10 bits
-    ADC0.CTRLA |= ADC_RESSEL_10BIT_gc;
-    
-    // Enable ADC and to run in stdby sleep mode
-    ADC0.CTRLA |= ADC_ENABLE_bm | ADC_RUNSTBY_bm;
+    // Resolution 10 bits, enable ADC and running also on stdy sleep mode
+    ADC0.CTRLA |= ADC_RESSEL_10BIT_gc | ADC_ENABLE_bm | ADC_RUNSTBY_bm;
     
     // Selecting AN8 (PE0) to be connected to ADC (LDR will be connected first)
     ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
@@ -220,7 +218,7 @@ void tcb_init(void)
 // Calibrates the threshold for light vs dark, depending on current lighting
 void ldr_threshold_calibrate(void)
 {
-    // Temporary values of calibration will be set into an array
+    // Three temporary values of calibration will be set into an array
     int calibTab [4] = {0};
     
     // Informing user via Putty
