@@ -224,7 +224,7 @@ void ldr_threshold_calibrate(void)
     // Informing user via Putty
     printf("Calibrating lighting, one moment...\r\n");
     
-    // Measuring current light conditions in LDR's environment 1000 times
+    // Measuring current light conditions in LDR's environment 10000 times
     for (int i = 0; i<=9999; i++)
     {
         // Waiting adc result to be ready
