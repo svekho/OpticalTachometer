@@ -53,7 +53,6 @@ static int usart0_print_char(char c, FILE *stream);
 static void usart0_init(void);
 void rtc_init(void);
 void adc_init(void);
-void lcd_init(void);
 void ldr_threshold_calibrate(void);
 void tcb_init(void);
 
@@ -191,19 +190,6 @@ void adc_init(void)
     
     // Enable interrupts
     ADC0.INTCTRL |= ADC_RESRDY_bm;
-}
-
-// Initialize LCD
-void lcd_init(void)
-{
-    // Configuring pins LCD uses as outputs, don't need to be atomic (no 
-    // interrupts enabled) but operations shall be fast
-    PORTB.DIRSET = PIN3_bm | PIN4_bm | PIN5_bm;
-    VPORTD.DIR |= PIN0_bm|PIN1_bm|PIN2_bm|PIN3_bm|PIN4_bm|PIN5_bm|PIN6_bm;
-    VPORTD.DIR |= PIN7_bm;
-    
-    // Enable backlight
-    VPORTB.OUT |= PIN5_bm;
 }
 
 // Initialize TCB0 PWM mode and output pin (to motor) for PWM signals

@@ -15,6 +15,20 @@
 #include <util/delay.h>
 #include <string.h>
 
+// Initialize LCD
+void lcd_init(void)
+{
+    // Configuring pins LCD uses as outputs, don't need to be atomic (no 
+    // interrupts enabled) but operations shall be fast
+    PORTB.DIRSET = PIN3_bm | PIN4_bm | PIN5_bm;
+    VPORTD.DIR |= PIN0_bm|PIN1_bm|PIN2_bm|PIN3_bm|PIN4_bm|PIN5_bm|PIN6_bm;
+    VPORTD.DIR |= PIN7_bm;
+    
+    // Enable backlight
+    VPORTB.OUT |= PIN5_bm;
+}
+
+// Update LCD display
 void lcd_update(uint16_t rpm)
 {
     // Placeholder for calculated rpm

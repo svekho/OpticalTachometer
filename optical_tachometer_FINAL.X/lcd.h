@@ -12,6 +12,7 @@
 extern "C" {
 #endif
 
+    void lcd_init(void);
     void lcd_update(int rpm);
 
 
