@@ -65,9 +65,6 @@ void tcb_init(void);
 // Global variable to store ADC result
 volatile uint16_t adcValue;
 
-// Variable to count rotations
-volatile uint16_t rotations;
-
 // Unsigned integer to indicate if the propeller is in front of the LDR, and  
 // this makes sure, the propeller is only counted once
 volatile uint8_t isPropOn;
@@ -319,9 +316,11 @@ int main(void)
     // initialized as 0
     uint8_t userVoltage = 0;
     
+    // Variable to count rotations, initialized as 0
+    volatile uint16_t rotations = 0;
+    
     // In the beginning the value of global variables is set to 0
     adcValue = 0;
-    rotations = 0;
     isPropOn = 0;
     lcdUpdate = 0;
     potentRead = 0;
