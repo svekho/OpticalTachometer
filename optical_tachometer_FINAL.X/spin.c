@@ -1,5 +1,5 @@
 /**
- * File: update_spin.c
+ * File: spin.c
  * 
  * DESCRIPTION
  *      This is a single source file for updating the spinning speed of DC 
@@ -11,7 +11,7 @@
 
 #include <avr/io.h>
 
-void update_spin(uint8_t userVoltage)
+void spin_update(uint8_t userVoltage)
 {    
     // Disable the peripheral to update TCB correctly without corrupts
     TCB0.CTRLA &= ~TCB_ENABLE_bm;

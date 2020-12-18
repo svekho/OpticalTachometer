@@ -38,8 +38,8 @@
 #define MIN_VOLT_DIFF (30)
 #define LWR_THRESH (5)
 
-#include "update_lcd.h"
-#include "update_spin.h"
+#include "lcd.h"
+#include "spin.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/cpufunc.h>
@@ -48,13 +48,13 @@
 #include <util/delay.h>
 
 // Function declarations
-static void usart0_sendchar(char c);
-static int usart0_printchar(char c, FILE *stream);
+static void usart0_send_char(char c);
+static int usart0_print_char(char c, FILE *stream);
 static void usart0_init(void);
 void rtc_init(void);
 void adc_init(void);
 void lcd_init(void);
-void calibrate_threshold(void);
+void ldr_threshold_calibrate(void);
 void tcb_init(void);
 
 // Global variable to store adc result
@@ -76,7 +76,7 @@ uint8_t userVoltage;
 volatile uint8_t potentRead;
 
 // Function for sending text to computer terminal/putty
-static void usart0_sendchar(char c)
+static void usart0_send_char(char c)
 {
     while (!(USART0.STATUS & USART_DREIF_bm))
     {
@@ -85,14 +85,14 @@ static void usart0_sendchar(char c)
     USART0.TXDATAL = c;
 }
 
-static int usart0_printchar(char c, FILE *stream)
+static int usart0_print_char(char c, FILE *stream)
 { 
-    usart0_sendchar(c);
+    usart0_send_char(c);
     return 0; 
 }
 
 static FILE USART_stream =  \
-    FDEV_SETUP_STREAM(usart0_printchar, NULL, _FDEV_SETUP_WRITE);
+    FDEV_SETUP_STREAM(usart0_print_char, NULL, _FDEV_SETUP_WRITE);
 
 // Intitialising connection to computer terminal/putty
 static void usart0_init(void)
@@ -225,7 +225,7 @@ void tcb_init(void)
 }
 
 // Calibrates the threshold for light vs dark, depending on current lighting.
-void calibrate_threshold(void)
+void ldr_threshold_calibrate(void)
 {
     // temporary values for calibration (array)
     int calibTab [4] = {0};
@@ -330,7 +330,7 @@ int main(void)
     ADC0.COMMAND = ADC_STCONV_bm;
     
     // Calibrates current lighting without anything in front of the LDR
-    calibrate_threshold();
+    ldr_threshold_calibrate();
     
     // Enable global interrupts
     sei();
@@ -349,7 +349,7 @@ int main(void)
             rpm = rotations*60;
             printf("%i rpm\r\n", rpm);
             // Updating display to RPM
-            update_lcd(rpm);
+            lcd_update(rpm);
             // Resetting rotations for next round
             rotations=0;
             // Enable interrupts again
@@ -397,7 +397,7 @@ int main(void)
             // Potentiometer value changed from 10 bits to 8
             userVoltage = adcValue>>2;
             // Updates motor speed
-            update_spin(userVoltage);
+            spin_update(userVoltage);
             // Switching ADC channel back to LDR
             ADC0.MUXPOS =  ADC_MUXPOS_AIN8_gc;
             // Settling time for ADC to switch the channel
