@@ -48,14 +48,14 @@
 #include <util/delay.h>
 
 // Function declarations
-static void USART0_sendChar(char c);
-static int USART0_printChar(char c, FILE *stream);
-static void USART0_init(void);
-void RTC_init(void);
-void ADC_init(void);
-void LCD_init(void);
+static void usart0_sendchar(char c);
+static int usart0_printchar(char c, FILE *stream);
+static void usart0_init(void);
+void rtc_init(void);
+void adc_init(void);
+void lcd_init(void);
 void calibrate_threshold(void);
-void TCB_init(void);
+void tcb_init(void);
 
 // Global variable to store adc result
 volatile uint16_t adcValue;
@@ -76,7 +76,7 @@ uint8_t userVoltage;
 volatile uint8_t potentRead;
 
 // Function for sending text to computer terminal/putty
-static void USART0_sendChar(char c)
+static void usart0_sendchar(char c)
 {
     while (!(USART0.STATUS & USART_DREIF_bm))
     {
@@ -85,17 +85,17 @@ static void USART0_sendChar(char c)
     USART0.TXDATAL = c;
 }
 
-static int USART0_printChar(char c, FILE *stream)
+static int usart0_printchar(char c, FILE *stream)
 { 
-    USART0_sendChar(c);
+    usart0_sendchar(c);
     return 0; 
 }
 
 static FILE USART_stream =  \
-    FDEV_SETUP_STREAM(USART0_printChar, NULL, _FDEV_SETUP_WRITE);
+    FDEV_SETUP_STREAM(usart0_printchar, NULL, _FDEV_SETUP_WRITE);
 
 // Intitialising connection to computer terminal/putty
-static void USART0_init(void)
+static void usart0_init(void)
 {
     PORTA.DIR |= PIN0_bm;
     
@@ -107,7 +107,7 @@ static void USART0_init(void)
 }
 
 // Configuring RTC
-void RTC_init(void)
+void rtc_init(void)
 {
     // Helping variable
     uint8_t temp;
@@ -162,7 +162,7 @@ void RTC_init(void)
 }
 
 // Configuring ADC
-void ADC_init(void)
+void adc_init(void)
 {
     // Set port E pin 0 as input for LDR and port F pin 4 input 
     // for potentiometer
@@ -194,9 +194,9 @@ void ADC_init(void)
 }
 
 // Initialize LCD
-void LCD_init(void)
+void lcd_init(void)
 {
-    // Configuring pins LCD uses as outputs, dont need to be atomic (no 
+    // Configuring pins LCD uses as outputs, don't need to be atomic (no 
     // interrupts enabled) but operations shall be fast
     PORTB.DIRSET = PIN3_bm | PIN4_bm | PIN5_bm;
     VPORTD.DIR |= PIN0_bm|PIN1_bm|PIN2_bm|PIN3_bm|PIN4_bm|PIN5_bm|PIN6_bm;
@@ -207,7 +207,7 @@ void LCD_init(void)
 }
 
 // Initialize TCB0 PWM mode and output pin (to motor) for PWM signals
-void TCB_init(void)
+void tcb_init(void)
 {
     // Configure correct pin as output to DC motor, and first as low
     VPORTA.DIR |= PIN2_bm;
@@ -255,7 +255,6 @@ void calibrate_threshold(void)
     voltThreshold = (calibTab[0]+calibTab[1]+calibTab[2])/3 + MIN_VOLT_DIFF;
     printf("Calibration complete!\r\n");
     printf("Threshold voltage: %i\r\n\n", voltThreshold);
-    return;
 }
 
 // RTC interrupt
@@ -315,15 +314,15 @@ int main(void)
     // Setting internal reference voltage to 1.5V
     VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
     // Initialize output to putty
-    USART0_init();
+    usart0_init();
     // Initialize LCD display
-    LCD_init();
+    lcd_init();
     // Initialize ADC and its input pin
-    ADC_init();
+    adc_init();
     // Initialize RTC
-    RTC_init();
+    rtc_init();
     // Initialize TCB to 8-bit PWM mode(and its output pin)
-    TCB_init();
+    tcb_init();
    
     // Setting IDLE as sleep mode
     set_sleep_mode(SLPCTRL_SMODE_IDLE_gc);
