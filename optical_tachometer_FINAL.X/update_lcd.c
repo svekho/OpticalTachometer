@@ -22,8 +22,8 @@ void update_lcd(uint16_t rpm)
 
     // This will be the number of elements in an array, initialized as 0 in the
     // beginning
-    int num = 0; 
-    // Counting how many chars will be in array, dividing with 10 to move
+    uint8_t num = 0; 
+    // Counting how many chars will be in string, dividing with 10 to move
     // towards the final digit of rpm (+1 for each round to num because one 
     // digit has been passed)
     do

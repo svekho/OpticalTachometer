@@ -75,7 +75,7 @@ uint8_t userVoltage;
 // time we need to read potentiometer
 volatile uint8_t potentRead;
 
-// Fuction for sending text to computer terminal/putty
+// Function for sending text to computer terminal/putty
 static void USART0_sendChar(char c)
 {
     while (!(USART0.STATUS & USART_DREIF_bm))
@@ -247,7 +247,7 @@ void calibrate_threshold(void)
             // Prints selected value to Putty
             printf("%d\r\n", calibTab[i/3333 - 1]);
         }
-        // Allowing next adc conversion begin
+        // Allowing next ADC conversion begin
         ADC0.INTFLAGS = ADC_RESRDY_bm;
     }
 
