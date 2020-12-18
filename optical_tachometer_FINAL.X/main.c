@@ -80,9 +80,6 @@ volatile uint8_t lcdUpdate;
 // is a propellor in front of the LDR or not
 uint16_t voltThreshold;
 
-// Indicates potentiometer value user has set for spinning speed
-uint8_t userVoltage;
-
 // Indicates whether we are going to measure LDR or potentiometer, every 100th
 // time we need to read potentiometer, otherwise LDR
 volatile uint8_t potentRead;
@@ -315,15 +312,18 @@ ISR(ADC0_RESRDY_vect)
 
 int main(void) 
 {
-    // Variable to store the rpm calculated from rotations
+    // Variable to store the rpm calculated from rotations, initialized as 0
     uint16_t rpm = 0;
+    
+    // Indicates potentiometer value user has set for spinning speed,
+    // initialized as 0
+    uint8_t userVoltage = 0;
     
     // In the beginning the value of global variables is set to 0
     adcValue = 0;
     rotations = 0;
     isPropOn = 0;
     lcdUpdate = 0;
-    userVoltage = 0;
     potentRead = 0;
     
     // Setting internal reference voltage to 1.5V
