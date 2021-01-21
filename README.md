@@ -16,4 +16,4 @@ In version FINAL, all versions are combined as one. The code in the FINAL reposi
 
 ## Commit history
 
-Commit history for project can be found at: https://github.com/AmyNyma/Optical_Tachometer . This will be available until team member Amy Nymalm decides to delete the project. 
+Commit history for project can be found at: https://github.com/AmyNyma/Optical_Tachometer . This will be available until team member AmyNyma decides to delete the project. 
