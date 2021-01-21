@@ -2,7 +2,7 @@
 
 This project has been created for a course DTEK0068 - "Embedded MicroProcessor Systems" held at the University of Turku. The project was started at the end of November 2020, and it was completed in mid-December 2020. The team which accomplished the project consisted of three participants. 
 
-This project was graded as the top of the class. Assignment and grading was given by university teacher Jani Tammi (https://github.com/Jasata), who also consulted in making my initial portfolio.
+**This project was graded as the top of the class.** Assignment and grading was given by university teacher Jani Tammi (https://github.com/Jasata), who also consulted in making my initial portfolio.
 
 ## Technical details
 
@@ -13,6 +13,8 @@ Optical Tachometer uses visible light to detect and calculate RPM of spinning pr
 Basic version introduces tachometer usage with 7-segment display which updates twice a second. DC motor control with a potentiometer is attached in version bonus1. Bonus2 version displays RPM with LCD display which updates once a second. 
 
 In version FINAL, all versions are combined as one. The code in the FINAL repository has been parsed to project's closure form.
+
+This project followed [BARR-C:2018 embedded C programming standard](https://barrgroup.com/embedded-systems/books/embedded-c-coding-standard), or more specifically the specific subset of the rules defined by the project requirements in the course.
 
 ## Commit history
 
