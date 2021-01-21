@@ -19,3 +19,21 @@ This project followed [BARR-C:2018 embedded C programming standard](https://barr
 ## Commit history
 
 Commit history for project can be found at: https://github.com/AmyNyma/Optical_Tachometer . This will be available until team member AmyNyma decides to delete the project. 
+
+## Teacher's note
+
+*This text has been requested to be added into portfolio project README by the undersigned, teacher of DTEK0068. Project work for DTEK0068 (2020) requires a demonstration of acquired knowledge in a form of a functional prototype device. My course covers wide range of topics, but the most important items required from the project submission are:*
+
+ 
+
+  - *Understanding and correct application of shared resources (volatility, atomic access)*
+  - *Correct use of interrupts to keep applications responsive*
+  - *Source code discipline, by following the given coding standard*
+
+ 
+
+*One of the driving goals in my course have been to introduce and enforce pracises and concepts of quality that I myself have learned in my own professional life, before starting my career as a teacher.*
+
+*Regards,
+Jani Tammi
+Teacher of DTEK0068*
