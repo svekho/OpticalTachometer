@@ -32,7 +32,7 @@ Commit history for project can be found at: https://github.com/AmyNyma/Optical_T
 
  
 
-*One of the driving goals in my course have been to introduce and enforce pracises and concepts of quality that I myself have learned in my own professional life, before starting my career as a teacher.*
+*One of the driving goals in my course have been to introduce and enforce practises and concepts of quality that I myself have learned in my own professional life, before starting my career as a teacher.*
 
 *Regards,
 Jani Tammi
